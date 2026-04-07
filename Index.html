@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Maester">
+<meta name="theme-color" content="#0c1410">
+<title>Maester</title>
+
+<!-- PWA manifest embedded as a data URL so we don't need a separate file -->
+<link rel="manifest" href='data:application/manifest+json,{"name":"Maester","short_name":"Maester","start_url":"./","display":"standalone","background_color":"%230c1410","theme_color":"%230c1410","orientation":"portrait","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><rect width=%22512%22 height=%22512%22 fill=%22%230c1410%22/><text x=%22256%22 y=%22340%22 font-size=%22280%22 text-anchor=%22middle%22 fill=%22%23c9a449%22 font-family=%22serif%22 font-style=%22italic%22>M</text></svg>","sizes":"512x512","type":"image/svg+xml"}]}'>
+
+<link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="%230c1410"/><text x="256" y="340" font-size="280" text-anchor="middle" fill="%23c9a449" font-family="serif" font-style="italic">M</text></svg>'>
+
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0c1410;
+    --bg-2: #131e18;
+    --bg-3: #1c2a23;
+    --line: rgba(241, 234, 213, 0.08);
+    --line-strong: rgba(241, 234, 213, 0.2);
+    --text: #f1ead5;
+    --text-dim: #8a9489;
+    --text-faint: #545d52;
+    --green: #355e3b;
+    --green-bright: #4a7a52;
+    --green-dim: rgba(74, 122, 82, 0.18);
+    --gold: #c9a449;
+    --gold-bright: #e0bc5d;
+    --gold-dim: rgba(201, 164, 73, 0.12);
+    --warning: #c7795a;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter Tight', -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    font-family: var(--sans);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    /* Safe area insets for notched iPhones */
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    min-height: 100vh;
+  }
+
+  .app {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .app::-webkit-scrollbar { display: none; }
+
+  .screen {
+    display: none;
+    padding: 20px 22px 30px;
+    animation: fadeIn 0.25s ease;
+    min-height: 100%;
+  }
+  .screen.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0 18px;
+  }
+  .topbar .back {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 6px 0;
+    background: none;
+    border: none;
+  }
+  .topbar .title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* HOME */
+  .greeting {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 32px;
+    line-height: 1.1;
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+  }
+  .date {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .session-card {
+    background: linear-gradient(135deg, var(--green) 0%, #233d29 100%);
+    border: 1px solid var(--green-bright);
+    border-radius: 18px;
+    padding: 24px 22px 22px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .session-card::before {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 140px; height: 140px;
+    background: radial-gradient(circle, var(--gold-dim) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .session-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .session-title {
+    font-family: var(--serif);
+    font-size: 38px;
+    line-height: 1;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .session-sub {
+    font-size: 13px;
+    color: rgba(241, 234, 213, 0.7);
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+  .start-btn {
+    display: block;
+    width: 100%;
+    background: var(--gold);
+    color: #1a1408;
+    border: none;
+    border-radius: 12px;
+    padding: 17px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+  }
+  .start-btn:active { transform: scale(0.98); background: var(--gold-bright); }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 22px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* The test panel — Stage 1 only, removed in Stage 2 */
+  .test-panel {
+    background: var(--bg-2);
+    border: 1px dashed var(--gold-dim);
+    border-radius: 12px;
+    padding: 18px;
+    margin-top: 16px;
+  }
+  .test-panel-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .test-panel-status {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .test-panel-status .ok { color: var(--green-bright); }
+  .test-panel-status .err { color: var(--warning); }
+  .test-btn {
+    display: block;
+    width: 100%;
+    background: var(--bg-3);
+    color: var(--text);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 14px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+  .test-btn:active { background: var(--bg); border-color: var(--gold); }
+  .test-btn.danger { color: var(--warning); }
+
+  /* Generic placeholder styles for future stages */
+  .placeholder-card {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 30px 22px;
+    text-align: center;
+    margin-top: 12px;
+  }
+  .placeholder-icon {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 48px;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .placeholder-title {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .placeholder-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+
+  /* Bottom nav */
+  .nav-bar {
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 20px calc(22px + env(safe-area-inset-bottom, 0));
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+    flex-shrink: 0;
+  }
+  .nav-bar button {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .nav-bar button.active { color: var(--gold); }
+
+  /* Build badge for stage tracking */
+  .build-badge {
+    position: fixed;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0));
+    right: 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.05em;
+    pointer-events: none;
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ========== HOME ========== -->
+  <div class="screen active" id="screen-home">
+    <div class="greeting" id="greeting">Hey Deeks</div>
+    <div class="date" id="date">Loading...</div>
+
+    <div class="session-card">
+      <div class="session-label">Today</div>
+      <div class="session-title" id="todaySession">Upper</div>
+      <div class="session-sub" id="todaySub">back emphasis · ~45 min</div>
+      <button class="start-btn" onclick="show('session')">Start Session</button>
+    </div>
+
+    <div class="section-label">Stage 1 Test Panel</div>
+    <div class="test-panel">
+      <div class="test-panel-title">Database Test</div>
+      <div class="test-panel-status" id="dbStatus">Initializing database...</div>
+      <button class="test-btn" onclick="testSave()">Test Save</button>
+      <button class="test-btn" onclick="testLoad()">Test Load</button>
+      <button class="test-btn danger" onclick="testClear()">Clear Test Data</button>
+    </div>
+  </div>
+
+  <!-- ========== SESSION ========== -->
+  <div class="screen" id="screen-session">
+    <div class="topbar">
+      <button class="back" onclick="show('home')">← Back</button>
+      <span class="title">Today's Session</span>
+      <span style="width: 30px;"></span>
+    </div>
+    <div class="placeholder-card">
+      <div class="placeholder-icon">II</div>
+      <div class="placeholder-title">Session Flow</div>
+      <div class="placeholder-sub">Coming in Stage 2</div>
+    </div>
+  </div>
+
+  <!-- ========== PICKER ========== -->
+  <div class="screen" id="screen-picker">
+    <div class="topbar">
+      <button class="back" onclick="show('session')">← Back</button>
+      <span class="title">Pick Movement</span>
+      <span style="width: 30px;"></span>
+    </div>
+    <div class="placeholder-card">
+      <div class="placeholder-icon">III</div>
+      <div class="placeholder-title">Exercise Picker</div>
+      <div class="placeholder-sub">Coming in Stage 2</div>
+    </div>
+  </div>
+
+  <!-- ========== EAT ========== -->
+  <div class="screen" id="screen-meal">
+    <div class="topbar">
+      <button class="back" onclick="show('home')">← Back</button>
+      <span class="title">Eat</span>
+      <span style="width: 30px;"></span>
+    </div>
+    <div class="placeholder-card">
+      <div class="placeholder-icon">IV</div>
+      <div class="placeholder-title">Meal Logging</div>
+      <div class="placeholder-sub">Coming in Stage 3</div>
+    </div>
+  </div>
+
+  <!-- ========== CALENDAR ========== -->
+  <div class="screen" id="screen-calendar">
+    <div class="topbar">
+      <button class="back" onclick="show('home')">← Back</button>
+      <span class="title">Calendar</span>
+      <span style="width: 30px;"></span>
+    </div>
+    <div class="placeholder-card">
+      <div class="placeholder-icon">V</div>
+      <div class="placeholder-title">Monthly Calendar</div>
+      <div class="placeholder-sub">Coming in Stage 4</div>
+    </div>
+  </div>
+
+  <!-- ========== DASHBOARD ========== -->
+  <div class="screen" id="screen-dash">
+    <div class="topbar">
+      <button class="back" onclick="show('home')">← Back</button>
+      <span class="title">This Week</span>
+      <span style="width: 30px;"></span>
+    </div>
+    <div class="placeholder-card">
+      <div class="placeholder-icon">VI</div>
+      <div class="placeholder-title">Weekly Dashboard</div>
+      <div class="placeholder-sub">Coming in Stage 4</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="nav-bar">
+  <button class="active" data-nav="home" onclick="show('home')">Home</button>
+  <button data-nav="session" onclick="show('session')">Train</button>
+  <button data-nav="meal" onclick="show('meal')">Eat</button>
+  <button data-nav="calendar" onclick="show('calendar')">Cal</button>
+  <button data-nav="dash" onclick="show('dash')">Week</button>
+</div>
+
+<div class="build-badge">v1.0 · Stage 1</div>
+
+<script>
+/* ============================================================
+   MAESTER — Stage 1
+   Skeleton + Data Layer + Navigation
+   ============================================================ */
+
+// ---------- NAVIGATION ----------
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + id);
+  if (target) target.classList.add('active');
+
+  document.querySelectorAll('.nav-bar button').forEach(b => {
+    b.classList.toggle('active', b.dataset.nav === id || (id === 'picker' && b.dataset.nav === 'session'));
+  });
+
+  document.querySelector('.app').scrollTop = 0;
+}
+
+// ---------- DATE / GREETING ----------
+function updateGreeting() {
+  const now = new Date();
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  document.getElementById('date').textContent = `${days[now.getDay()]} · ${months[now.getMonth()]} ${now.getDate()}`;
+}
+
+// ---------- INDEXEDDB DATA LAYER ----------
+const DB_NAME = 'MaesterDB';
+const DB_VERSION = 1;
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+
+    req.onupgradeneeded = (e) => {
+      const database = e.target.result;
+
+      // Sessions store: workout sessions
+      if (!database.objectStoreNames.contains('sessions')) {
+        const sessionsStore = database.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true });
+        sessionsStore.createIndex('date', 'date', { unique: false });
+      }
+
+      // Exercises store: individual exercises within sessions
+      if (!database.objectStoreNames.contains('exercises')) {
+        const exercisesStore = database.createObjectStore('exercises', { keyPath: 'id', autoIncrement: true });
+        exercisesStore.createIndex('sessionId', 'sessionId', { unique: false });
+        exercisesStore.createIndex('date', 'date', { unique: false });
+        exercisesStore.createIndex('muscle', 'muscle', { unique: false });
+      }
+
+      // Meals store
+      if (!database.objectStoreNames.contains('meals')) {
+        const mealsStore = database.createObjectStore('meals', { keyPath: 'id', autoIncrement: true });
+        mealsStore.createIndex('date', 'date', { unique: false });
+        mealsStore.createIndex('bucket', 'bucket', { unique: false });
+      }
+
+      // Bodyweight store
+      if (!database.objectStoreNames.contains('weights')) {
+        const weightsStore = database.createObjectStore('weights', { keyPath: 'id', autoIncrement: true });
+        weightsStore.createIndex('date', 'date', { unique: false });
+      }
+
+      // Settings store (for goals, preferences, custom presets)
+      if (!database.objectStoreNames.contains('settings')) {
+        database.createObjectStore('settings', { keyPath: 'key' });
+      }
+
+      // Test store — for Stage 1 verification only
+      if (!database.objectStoreNames.contains('test')) {
+        database.createObjectStore('test', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+
+    req.onsuccess = (e) => {
+      db = e.target.result;
+      resolve(db);
+    };
+
+    req.onerror = (e) => {
+      reject(e.target.error);
+    };
+  });
+}
+
+// Generic helper: save a record
+function dbSave(storeName, record) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([storeName], 'readwrite');
+    const store = tx.objectStore(storeName);
+    const req = store.add(record);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// Generic helper: get all records from a store
+function dbGetAll(storeName) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([storeName], 'readonly');
+    const store = tx.objectStore(storeName);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// Generic helper: clear a store
+function dbClear(storeName) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([storeName], 'readwrite');
+    const store = tx.objectStore(storeName);
+    const req = store.clear();
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ---------- TEST PANEL FUNCTIONS ----------
+async function testSave() {
+  const status = document.getElementById('dbStatus');
+  try {
+    const now = new Date();
+    const id = await dbSave('test', {
+      timestamp: now.toISOString(),
+      readable: now.toLocaleString(),
+      message: 'Stage 1 test save'
+    });
+    status.innerHTML = `<span class="ok">✓ Saved</span><br>Record #${id} at ${now.toLocaleTimeString()}`;
+  } catch (err) {
+    status.innerHTML = `<span class="err">✗ Save failed:</span><br>${err.message}`;
+  }
+}
+
+async function testLoad() {
+  const status = document.getElementById('dbStatus');
+  try {
+    const records = await dbGetAll('test');
+    if (records.length === 0) {
+      status.innerHTML = `<span class="err">No records yet</span><br>Tap Test Save first.`;
+    } else {
+      const last = records[records.length - 1];
+      status.innerHTML = `<span class="ok">✓ ${records.length} record(s) in DB</span><br>Last: ${last.readable}`;
+    }
+  } catch (err) {
+    status.innerHTML = `<span class="err">✗ Load failed:</span><br>${err.message}`;
+  }
+}
+
+async function testClear() {
+  const status = document.getElementById('dbStatus');
+  if (!confirm('Clear all test records? (Real data is not affected)')) return;
+  try {
+    await dbClear('test');
+    status.innerHTML = `<span class="ok">✓ Test store cleared</span>`;
+  } catch (err) {
+    status.innerHTML = `<span class="err">✗ Clear failed:</span><br>${err.message}`;
+  }
+}
+
+// ---------- INIT ----------
+async function init() {
+  updateGreeting();
+  const status = document.getElementById('dbStatus');
+  try {
+    await openDB();
+    const records = await dbGetAll('test');
+    if (records.length > 0) {
+      const last = records[records.length - 1];
+      status.innerHTML = `<span class="ok">✓ DB ready · ${records.length} test record(s)</span><br>Last: ${last.readable}`;
+    } else {
+      status.innerHTML = `<span class="ok">✓ DB ready · empty</span><br>Tap Test Save to verify persistence.`;
+    }
+  } catch (err) {
+    status.innerHTML = `<span class="err">✗ DB failed to open:</span><br>${err.message}`;
+  }
+}
+
+// Run init when page loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+
+</body>
+</html>

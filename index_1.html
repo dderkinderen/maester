@@ -1,0 +1,2515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Maester">
+<meta name="theme-color" content="#0c1410">
+<title>Maester</title>
+
+<link rel="manifest" href='data:application/manifest+json,{"name":"Maester","short_name":"Maester","start_url":"./","display":"standalone","background_color":"%230c1410","theme_color":"%230c1410","orientation":"portrait","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><rect width=%22512%22 height=%22512%22 fill=%22%230c1410%22/><text x=%22256%22 y=%22340%22 font-size=%22280%22 text-anchor=%22middle%22 fill=%22%23c9a449%22 font-family=%22serif%22 font-style=%22italic%22>M</text></svg>","sizes":"512x512","type":"image/svg+xml"}]}'>
+
+<link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="%230c1410"/><text x="256" y="340" font-size="280" text-anchor="middle" fill="%23c9a449" font-family="serif" font-style="italic">M</text></svg>'>
+
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0c1410;
+    --bg-2: #131e18;
+    --bg-3: #1c2a23;
+    --line: rgba(241, 234, 213, 0.08);
+    --line-strong: rgba(241, 234, 213, 0.2);
+    --text: #f1ead5;
+    --text-dim: #8a9489;
+    --text-faint: #545d52;
+    --green: #355e3b;
+    --green-bright: #4a7a52;
+    --green-dim: rgba(74, 122, 82, 0.18);
+    --gold: #c9a449;
+    --gold-bright: #e0bc5d;
+    --gold-dim: rgba(201, 164, 73, 0.12);
+    --warning: #c7795a;
+    --muscle-base: #2a3328;
+    --muscle-active: #c44a3a;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter Tight', -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    font-family: var(--sans);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    min-height: 100vh;
+  }
+
+  .app {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .app::-webkit-scrollbar { display: none; }
+
+  .screen {
+    display: none;
+    padding: 20px 22px 30px;
+    animation: fadeIn 0.25s ease;
+    min-height: 100%;
+  }
+  .screen.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0 18px;
+  }
+  .topbar .back, .topbar .action {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 6px 0;
+    background: none;
+    border: none;
+  }
+  .topbar .action { color: var(--gold); }
+  .topbar .title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* HOME */
+  .greeting {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 32px;
+    line-height: 1.1;
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+  }
+  .date {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .session-card {
+    background: linear-gradient(135deg, var(--green) 0%, #233d29 100%);
+    border: 1px solid var(--green-bright);
+    border-radius: 18px;
+    padding: 24px 22px 22px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .session-card::before {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 140px; height: 140px;
+    background: radial-gradient(circle, var(--gold-dim) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .session-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .session-title {
+    font-family: var(--serif);
+    font-size: 38px;
+    line-height: 1;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .session-sub {
+    font-size: 13px;
+    color: rgba(241, 234, 213, 0.7);
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+  .start-btn, .primary-btn {
+    display: block;
+    width: 100%;
+    background: var(--gold);
+    color: #1a1408;
+    border: none;
+    border-radius: 12px;
+    padding: 17px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+  }
+  .start-btn:active, .primary-btn:active { transform: scale(0.98); background: var(--gold-bright); }
+
+  .secondary-btn {
+    display: block;
+    width: 100%;
+    background: var(--bg-2);
+    color: var(--text);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 14px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .secondary-btn:active { background: var(--bg-3); border-color: var(--gold); }
+
+  .danger-btn {
+    background: transparent;
+    color: var(--warning);
+    border: 1px solid rgba(199, 121, 90, 0.3);
+  }
+  .danger-btn:active { background: rgba(199, 121, 90, 0.08); }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 22px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .placeholder-card {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 30px 22px;
+    text-align: center;
+    margin-top: 12px;
+  }
+  .placeholder-icon { font-family: var(--serif); font-style: italic; font-size: 48px; color: var(--gold); line-height: 1; margin-bottom: 12px; }
+  .placeholder-title { font-family: var(--serif); font-style: italic; font-size: 22px; margin-bottom: 6px; }
+  .placeholder-sub { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.15em; }
+
+  /* SESSION TYPE PICKER */
+  .type-grid { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+  .type-card {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 22px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .type-card:active { transform: scale(0.99); border-color: var(--gold); }
+  .type-card.suggested { border-color: var(--gold); background: linear-gradient(90deg, var(--gold-dim) 0%, var(--bg-2) 80%); }
+  .type-card-num { font-family: var(--serif); font-style: italic; font-size: 38px; color: var(--gold); line-height: 1; width: 40px; flex-shrink: 0; }
+  .type-card-info { flex: 1; }
+  .type-card-name { font-family: var(--serif); font-style: italic; font-size: 26px; line-height: 1; margin-bottom: 4px; }
+  .type-card-sub { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; }
+
+  /* SESSION SCREEN */
+  .session-banner { font-family: var(--serif); font-style: italic; font-size: 28px; margin-bottom: 4px; }
+  .session-meta { font-family: var(--mono); font-size: 10px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 20px; }
+
+  .walk-card {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    cursor: pointer;
+  }
+  .walk-card.done { background: var(--green-dim); border-color: var(--green-bright); }
+  .walk-text { font-size: 14px; }
+  .walk-text small { display: block; color: var(--text-dim); font-size: 11px; margin-top: 2px; font-family: var(--mono); letter-spacing: 0.05em; }
+  .walk-tap { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--text-dim); display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--text-dim); }
+  .walk-card.done .walk-tap { background: var(--green-bright); border-color: var(--green-bright); color: #0c1410; }
+
+  .exercise-list { margin-top: 4px; }
+  .exercise-row {
+    display: flex;
+    align-items: center;
+    padding: 16px 16px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.1s;
+    gap: 14px;
+  }
+  .exercise-row:active { transform: scale(0.99); }
+  .exercise-row.done { background: var(--green-dim); border-color: rgba(74, 122, 82, 0.35); }
+  .exercise-row.skipped { background: var(--bg-2); opacity: 0.5; border-style: dashed; }
+  .exercise-circle { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--text-dim); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; font-weight: 700; }
+  .exercise-row.done .exercise-circle { background: var(--green-bright); border-color: var(--green-bright); color: #0c1410; }
+  .exercise-row.skipped .exercise-circle { border-color: var(--text-faint); color: var(--text-faint); }
+  .exercise-info { flex: 1; min-width: 0; }
+  .exercise-name { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+  .exercise-target { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .exercise-row.done .exercise-target { color: var(--green-bright); }
+
+  /* BODY FIGURE */
+  .body-figure-container { background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin: 20px 0; }
+  .body-toggle { display: flex; gap: 8px; margin-bottom: 12px; justify-content: center; }
+  .body-toggle-btn { background: var(--bg-3); border: 1px solid var(--line); color: var(--text-dim); padding: 8px 18px; border-radius: 8px; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; cursor: pointer; }
+  .body-toggle-btn.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+  .body-svg-wrap { display: flex; justify-content: center; align-items: center; min-height: 220px; }
+  .body-svg-wrap svg { width: 160px; height: 220px; display: block; }
+  .body-svg-wrap svg.hidden { display: none; }
+  .muscle-region { fill: var(--muscle-base); stroke: var(--bg); stroke-width: 0.5; transition: fill 0.4s ease; }
+  .muscle-region.active { fill: #c44a3a; }
+  .body-legend { text-align: center; margin-top: 10px; font-family: var(--mono); font-size: 9px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .session-actions { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line); }
+
+  /* LOGGING SCREENS */
+  .log-header { margin-bottom: 18px; }
+  .log-title { font-family: var(--serif); font-size: 34px; line-height: 1; margin-bottom: 4px; }
+  .log-sub { font-size: 11px; color: var(--text-dim); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.12em; }
+  .last-time { font-family: var(--mono); font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.1em; padding: 8px 0 14px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+
+  .rep-goal { background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%); border: 1px solid var(--gold-dim); border-radius: 14px; padding: 20px; margin-bottom: 16px; text-align: center; }
+  .rep-goal-label { font-family: var(--mono); font-size: 10px; color: var(--gold); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 8px; }
+  .rep-goal-numbers { font-family: var(--mono); font-size: 38px; font-weight: 700; margin-bottom: 14px; letter-spacing: -1px; color: var(--gold); }
+  .rep-goal-numbers .target { color: var(--text-faint); font-weight: 400; }
+  .rep-goal-bar { height: 6px; background: var(--bg-3); border-radius: 3px; overflow: hidden; }
+  .rep-goal-fill { height: 100%; background: linear-gradient(90deg, var(--gold) 0%, var(--gold-bright) 100%); border-radius: 3px; transition: width 0.5s ease; }
+
+  .set-card { background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 14px; }
+  .set-num { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; width: 42px; flex-shrink: 0; }
+  .set-card.done { border-color: rgba(74, 122, 82, 0.35); background: var(--green-dim); }
+
+  .stepper { display: flex; align-items: center; background: var(--bg-3); border-radius: 8px; overflow: hidden; }
+  .stepper button { background: none; border: none; color: var(--text); width: 32px; height: 36px; font-size: 18px; cursor: pointer; font-family: var(--mono); }
+  .stepper button:active { background: var(--bg); color: var(--gold); }
+  .stepper-value { min-width: 38px; text-align: center; font-family: var(--mono); font-size: 16px; font-weight: 600; color: var(--gold); }
+  .set-check { margin-left: auto; width: 36px; height: 36px; border-radius: 50%; background: var(--bg-3); border: 1.5px solid var(--line-strong); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-dim); font-size: 16px; flex-shrink: 0; }
+  .set-card.done .set-check { background: var(--green-bright); border-color: var(--green-bright); color: #0c1410; }
+  .set-label { font-size: 11px; color: var(--text-dim); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .plate-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .plate-row:last-child { margin-bottom: 0; }
+  .plate-label { font-family: var(--mono); font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; width: 70px; flex-shrink: 0; }
+  .extras-buttons { display: flex; gap: 6px; margin-left: 4px; flex-wrap: wrap; }
+  .extras-btn { background: var(--bg-3); border: 1px solid var(--line); border-radius: 6px; color: var(--text); padding: 6px 10px; font-family: var(--mono); font-size: 11px; cursor: pointer; }
+  .extras-btn.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+  .set-card-plate { flex-direction: column; align-items: stretch; gap: 8px; }
+  .set-card-plate-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+
+  .add-set { text-align: center; padding: 12px; color: var(--text-dim); font-size: 13px; border: 1px dashed var(--line-strong); border-radius: 12px; margin-top: 4px; cursor: pointer; font-style: italic; }
+  .add-set:active { color: var(--gold); border-color: var(--gold); }
+
+  .feel-row { display: flex; gap: 8px; margin-top: 18px; }
+  .feel-btn { flex: 1; background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 8px; font-size: 11px; cursor: pointer; text-align: center; color: var(--text); }
+  .feel-btn.selected { border-color: var(--gold); background: var(--gold-dim); color: var(--gold); }
+  .feel-btn .emoji { font-size: 22px; display: block; margin-bottom: 4px; }
+
+  .log-actions { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
+
+  /* SUMMARY */
+  .summary-card { background: linear-gradient(135deg, var(--green) 0%, #233d29 100%); border: 1px solid var(--green-bright); border-radius: 18px; padding: 28px 22px; margin-bottom: 18px; text-align: center; position: relative; overflow: hidden; }
+  .summary-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at top, var(--gold-dim) 0%, transparent 60%); pointer-events: none; }
+  .summary-title { font-family: var(--serif); font-style: italic; font-size: 36px; line-height: 1; margin-bottom: 6px; position: relative; }
+  .summary-sub { font-family: var(--mono); font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.18em; position: relative; }
+  .summary-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+  .summary-stat { background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px 8px; text-align: center; }
+  .summary-stat-num { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: 4px; }
+  .summary-stat-label { font-family: var(--mono); font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
+  .summary-list { background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 4px 0; margin-bottom: 18px; }
+  .summary-list-item { padding: 12px 18px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .summary-list-item:last-child { border-bottom: none; }
+  .summary-list-name { font-size: 14px; }
+  .summary-list-meta { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+  .summary-list-meta.skipped { color: var(--warning); }
+  .summary-list-meta.done { color: var(--green-bright); }
+
+  /* Bottom nav */
+  .nav-bar { display: flex; justify-content: space-around; padding: 12px 20px calc(22px + env(safe-area-inset-bottom, 0)); border-top: 1px solid var(--line); background: var(--bg); flex-shrink: 0; }
+  .nav-bar button { background: none; border: none; color: var(--text-faint); font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; cursor: pointer; padding: 4px 8px; }
+  .nav-bar button.active { color: var(--gold); }
+
+  .build-badge { position: fixed; bottom: calc(60px + env(safe-area-inset-bottom, 0)); right: 12px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font-family: var(--mono); font-size: 9px; color: var(--text-faint); letter-spacing: 0.05em; pointer-events: none; z-index: 100; }
+
+  /* SWAP MODAL */
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s ease; }
+  .modal-backdrop.active { display: flex; }
+  .modal { background: var(--bg-2); border-top: 1px solid var(--gold-dim); border-radius: 20px 20px 0 0; width: 100%; max-width: 500px; max-height: 80vh; display: flex; flex-direction: column; animation: slideUp 0.25s ease; padding-bottom: env(safe-area-inset-bottom, 0); }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-header { padding: 20px 22px 14px; border-bottom: 1px solid var(--line); position: relative; }
+  .modal-grabber { width: 40px; height: 4px; background: var(--text-faint); border-radius: 2px; margin: 0 auto 14px; }
+  .modal-title { font-family: var(--serif); font-style: italic; font-size: 26px; line-height: 1; margin-bottom: 4px; }
+  .modal-sub { font-family: var(--mono); font-size: 10px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.15em; }
+  .modal-close { position: absolute; top: 18px; right: 18px; background: none; border: none; color: var(--text-dim); font-size: 24px; cursor: pointer; padding: 0; line-height: 1; }
+  .modal-body { flex: 1; overflow-y: auto; padding: 14px 22px 20px; -webkit-overflow-scrolling: touch; }
+  .modal-body::-webkit-scrollbar { display: none; }
+  .swap-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; background: var(--bg-3); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; cursor: pointer; }
+  .swap-row:active { background: var(--bg); border-color: var(--gold); }
+  .swap-row.current { border-color: var(--gold); background: var(--gold-dim); }
+  .swap-name { font-size: 15px; font-weight: 500; }
+  .swap-tag { font-family: var(--mono); font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; }
+  .swap-tag.current { color: var(--gold); }
+  .add-custom-section { margin-top: 14px; padding: 18px; background: var(--bg-3); border: 1px dashed var(--line-strong); border-radius: 12px; }
+  .add-custom-label { font-family: var(--mono); font-size: 10px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 10px; }
+  .add-custom-input { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; color: var(--text); padding: 12px 14px; font-size: 14px; font-family: var(--sans); margin-bottom: 10px; }
+  .add-custom-input:focus { outline: none; border-color: var(--gold); }
+  .add-custom-btn { width: 100%; background: var(--gold); color: #1a1408; border: none; border-radius: 8px; padding: 12px; font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+  .add-custom-btn:active { background: var(--gold-bright); }
+
+  /* ===== MEAL LOGGING STYLES ===== */
+
+  /* Home protein card */
+  .protein-home-card { background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin-bottom: 16px; cursor: pointer; display: flex; align-items: center; gap: 16px; transition: border-color 0.2s; }
+  .protein-home-card:active { border-color: var(--gold); }
+  .protein-home-bar-section { flex: 1; min-width: 0; }
+  .protein-home-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+  .protein-home-numbers { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--text); }
+  .protein-home-numbers .ph-target { color: var(--text-faint); font-weight: 400; font-size: 11px; }
+  .protein-home-status { font-family: var(--mono); font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
+  .protein-home-status.hit { color: var(--green-bright); }
+  .protein-home-bar { height: 4px; background: var(--bg-3); border-radius: 2px; overflow: hidden; }
+  .protein-home-fill { height: 100%; background: linear-gradient(90deg, var(--gold) 0%, var(--gold-bright) 100%); border-radius: 2px; transition: width 0.5s ease; }
+  .protein-home-fill.complete { background: linear-gradient(90deg, var(--green-bright) 0%, #5fa067 100%); }
+  .protein-home-cta { font-family: var(--mono); font-size: 10px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.12em; flex-shrink: 0; }
+
+  /* Eat home */
+  .eat-title { font-family: var(--serif); font-style: italic; font-size: 32px; line-height: 1.1; margin-bottom: 4px; }
+  .eat-subtitle { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 22px; }
+  .eat-protein-section { margin-bottom: 24px; }
+  .eat-protein-numbers { font-family: var(--mono); font-size: 36px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 4px; }
+  .eat-protein-numbers .ep-target { font-size: 20px; color: var(--text-faint); font-weight: 400; }
+  .eat-protein-bar { height: 8px; background: var(--bg-3); border-radius: 4px; overflow: hidden; margin: 10px 0 4px; }
+  .eat-protein-fill { height: 100%; background: linear-gradient(90deg, var(--gold) 0%, var(--gold-bright) 100%); border-radius: 4px; transition: width 0.6s ease; }
+  .eat-protein-fill.complete { background: linear-gradient(90deg, var(--green-bright) 0%, #5fa067 100%); }
+  .eat-protein-label { font-family: var(--mono); font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; }
+  .eat-protein-label.hit { color: var(--green-bright); }
+  .eat-cal-line { font-family: var(--mono); font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 6px; }
+  .eat-cal-line .cal-num { color: var(--text-dim); }
+
+  /* 2x2 grid */
+  .meal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .meal-bucket-card { background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; padding: 18px 16px; cursor: pointer; min-height: 120px; display: flex; flex-direction: column; transition: border-color 0.2s, transform 0.1s; position: relative; overflow: hidden; }
+  .meal-bucket-card:active { transform: scale(0.98); border-color: var(--gold); }
+  .meal-bucket-card.logged { background: var(--green-dim); border-color: rgba(74, 122, 82, 0.4); }
+  .meal-bucket-name { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--gold); margin-bottom: 2px; }
+  .meal-bucket-time { font-family: var(--mono); font-size: 9px; color: var(--text-faint); letter-spacing: 0.08em; margin-bottom: auto; padding-bottom: 10px; }
+  .meal-bucket-meal-name { font-size: 13px; font-weight: 500; line-height: 1.2; margin-bottom: 3px; color: var(--text); }
+  .meal-bucket-protein { font-family: var(--mono); font-size: 11px; color: var(--green-bright); letter-spacing: 0.06em; }
+  .meal-bucket-empty { font-family: var(--mono); font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.1em; margin-top: auto; }
+  .meal-bucket-multi { font-family: var(--mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.08em; margin-top: 2px; }
+
+  /* Bucket detail */
+  .bucket-title { font-family: var(--serif); font-style: italic; font-size: 34px; line-height: 1; margin-bottom: 4px; }
+  .bucket-sub { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 20px; }
+
+  .meal-option-row { background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: border-color 0.2s, transform 0.1s; gap: 12px; }
+  .meal-option-row:active { transform: scale(0.99); border-color: var(--gold); }
+  .meal-option-row.logged { background: var(--green-dim); border-color: rgba(74, 122, 82, 0.4); }
+  .meal-option-row.top-pick { border-color: var(--gold-dim); }
+  .meal-option-info { flex: 1; min-width: 0; }
+  .meal-option-name { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+  .meal-option-meta { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .meal-option-row.logged .meal-option-meta { color: var(--green-bright); }
+  .meal-option-row.top-pick .meal-option-meta { color: var(--gold); }
+  .meal-option-check { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--text-dim); display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--text-dim); flex-shrink: 0; }
+  .meal-option-row.logged .meal-option-check { background: var(--green-bright); border-color: var(--green-bright); color: #0c1410; }
+
+  /* Buy/Brownbag toggle */
+  .binary-toggle { display: flex; gap: 10px; margin-bottom: 20px; }
+  .binary-btn { flex: 1; background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px 12px; text-align: center; cursor: pointer; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); transition: border-color 0.2s, background 0.2s; }
+  .binary-btn:active { transform: scale(0.98); }
+  .binary-btn.active { border-color: var(--gold); background: var(--gold-dim); color: var(--gold); }
+  .binary-btn-icon { font-size: 22px; display: block; margin-bottom: 6px; }
+
+  .meal-type-input { width: 100%; background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; color: var(--text); padding: 14px 16px; font-size: 15px; font-family: var(--sans); margin-bottom: 10px; display: block; }
+  .meal-type-input:focus { outline: none; border-color: var(--gold); }
+  .meal-type-input::placeholder { color: var(--text-faint); }
+
+  .recent-section { margin-top: 18px; }
+  .recent-header { font-family: var(--mono); font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; }
+  .recent-item { background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; padding: 13px 16px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: border-color 0.2s; }
+  .recent-item:active { border-color: var(--gold); }
+  .recent-item-name { font-size: 14px; flex: 1; min-width: 0; }
+  .recent-item-meta { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0; margin-left: 10px; }
+
+  .bucket-logged-banner { background: var(--green-dim); border: 1px solid rgba(74, 122, 82, 0.4); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-family: var(--mono); font-size: 10px; color: var(--green-bright); text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; justify-content: space-between; }
+  .bucket-logged-banner-remove { color: var(--text-faint); cursor: pointer; font-size: 12px; padding: 2px 6px; }
+  .bucket-logged-banner-remove:active { color: var(--warning); }
+
+  /* ===== CFA MENU SCREEN ===== */
+  .cfa-screen { padding-bottom: 100px; } /* space for sticky bar */
+
+  .cfa-running-totals {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cfa-total-item {
+    text-align: center;
+  }
+  .cfa-total-num {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .cfa-total-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .cfa-total-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--line);
+  }
+
+  .cfa-category-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin: 18px 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cfa-category-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  .cfa-item-row {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .cfa-item-row:active { transform: scale(0.99); }
+  .cfa-item-row.selected {
+    background: var(--green-dim);
+    border-color: rgba(74, 122, 82, 0.5);
+  }
+  .cfa-item-check {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text-dim);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .cfa-item-row.selected .cfa-item-check {
+    background: var(--green-bright);
+    border-color: var(--green-bright);
+    color: #0c1410;
+  }
+  .cfa-item-info { flex: 1; min-width: 0; }
+  .cfa-item-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .cfa-item-meta { font-family: var(--mono); font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .cfa-item-row.selected .cfa-item-meta { color: var(--green-bright); }
+
+  /* Sticky log bar at bottom of CFA screen */
+  .cfa-sticky-bar {
+    position: fixed;
+    bottom: calc(58px + env(safe-area-inset-bottom, 0));
+    left: 0;
+    right: 0;
+    background: var(--bg);
+    border-top: 1px solid var(--line-strong);
+    padding: 12px 22px;
+    z-index: 50;
+    display: none;
+  }
+  .cfa-sticky-bar.visible { display: block; }
+  .cfa-log-btn {
+    width: 100%;
+    background: var(--gold);
+    color: #1a1408;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .cfa-log-btn:active { background: var(--gold-bright); transform: scale(0.99); }
+  .cfa-log-btn-sub {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: none;
+    opacity: 0.7;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* ===== WEEKLY SCOREBOARD ===== */
+  .scoreboard-card {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .scoreboard-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .scoreboard-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--text-faint);
+  }
+  .scoreboard-week {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.08em;
+  }
+  .scoreboard-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    gap: 12px;
+  }
+  .scoreboard-row:last-child { border-bottom: none; }
+  .scoreboard-row:active { opacity: 0.7; }
+  .scoreboard-row-left { flex: 1; min-width: 0; }
+  .scoreboard-muscle {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 1px;
+  }
+  .scoreboard-target {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .scoreboard-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .scoreboard-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--bg-3);
+    border: 1.5px solid var(--text-faint);
+    transition: background 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+  }
+  .scoreboard-dot.filled {
+    background: var(--gold);
+    border-color: var(--gold);
+  }
+  .scoreboard-dot.filled.complete {
+    background: var(--green-bright);
+    border-color: var(--green-bright);
+  }
+  .scoreboard-log-hint {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+  }
+
+  /* Quick-log modal */
+  .quicklog-modal {
+    background: var(--bg-2);
+    border-top: 1px solid var(--gold-dim);
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 500px;
+    animation: slideUp 0.25s ease;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .quicklog-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .quicklog-option:last-child { border-bottom: none; }
+  .quicklog-option:active { background: var(--bg-3); }
+  .quicklog-option-name { font-size: 15px; font-weight: 500; }
+  .quicklog-option-arrow { color: var(--text-faint); font-size: 18px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ========== HOME ========== -->
+  <div class="screen active" id="screen-home">
+    <div class="greeting" id="greeting">Hey Deeks</div>
+    <div class="date" id="date">Loading...</div>
+
+    <div class="session-card">
+      <div class="session-label">Today</div>
+      <div class="session-title" id="todaySessionLabel">Train</div>
+      <div class="session-sub" id="todaySessionSub">Tap to begin · ~45 min</div>
+      <button class="start-btn" onclick="show('sessionPicker')">Start Session</button>
+    </div>
+
+    <div class="protein-home-card" onclick="show('meal')">
+      <div class="protein-home-bar-section">
+        <div class="protein-home-row">
+          <div class="protein-home-numbers">
+            <span id="homeProteinNum">0</span><span class="ph-target"> / 145g protein</span>
+          </div>
+          <div class="protein-home-status" id="homeProteinStatus">145g to go</div>
+        </div>
+        <div class="protein-home-bar">
+          <div class="protein-home-fill" id="homeProteinFill" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="protein-home-cta">Eat →</div>
+    </div>
+
+    <div class="section-label">This Week</div>
+    <div class="scoreboard-card" id="scoreboardCard">
+      <div class="scoreboard-header">
+        <span class="scoreboard-title">Weak Points</span>
+        <span class="scoreboard-week" id="scoreboardWeekLabel">Mon–Sun</span>
+      </div>
+      <div class="scoreboard-row" onclick="openQuickLog('rear-delts')">
+        <div class="scoreboard-row-left">
+          <div class="scoreboard-muscle">Rear Delts</div>
+          <div class="scoreboard-target">2× per week</div>
+        </div>
+        <div class="scoreboard-dots" id="dots-rear-delts"></div>
+        <div class="scoreboard-log-hint">+ Log</div>
+      </div>
+      <div class="scoreboard-row" onclick="openQuickLog('traps')">
+        <div class="scoreboard-row-left">
+          <div class="scoreboard-muscle">Traps</div>
+          <div class="scoreboard-target">2× per week</div>
+        </div>
+        <div class="scoreboard-dots" id="dots-traps"></div>
+        <div class="scoreboard-log-hint">+ Log</div>
+      </div>
+      <div class="scoreboard-row" onclick="openQuickLog('core')">
+        <div class="scoreboard-row-left">
+          <div class="scoreboard-muscle">Abs</div>
+          <div class="scoreboard-target">3× per week</div>
+        </div>
+        <div class="scoreboard-dots" id="dots-core"></div>
+        <div class="scoreboard-log-hint">+ Log</div>
+      </div>
+    </div>
+
+    <div class="section-label">Quick Stats</div>
+    <div class="placeholder-card" id="quickStats">
+      <div class="placeholder-title" id="quickStatsTitle">Loading...</div>
+      <div class="placeholder-sub">All sessions logged so far</div>
+    </div>
+  </div>
+
+  <!-- ========== SESSION PICKER ========== -->
+  <div class="screen" id="screen-sessionPicker">
+    <div class="topbar">
+      <button class="back" onclick="show('home')">← Back</button>
+      <span class="title">Pick Session</span>
+      <span style="width: 30px;"></span>
+    </div>
+    <div class="session-banner">What are we doing?</div>
+    <div class="session-meta" id="suggestedHint">Pick your session type</div>
+    <div class="type-grid">
+      <div class="type-card" onclick="startSession('upper-chest')">
+        <div class="type-card-num">I</div>
+        <div class="type-card-info">
+          <div class="type-card-name">Upper · Chest</div>
+          <div class="type-card-sub">Chest emphasis · 3 movements</div>
+        </div>
+      </div>
+      <div class="type-card" onclick="startSession('upper-back')">
+        <div class="type-card-num">II</div>
+        <div class="type-card-info">
+          <div class="type-card-name">Upper · Back</div>
+          <div class="type-card-sub">Back emphasis · 3 movements</div>
+        </div>
+      </div>
+      <div class="type-card" onclick="startSession('lower')">
+        <div class="type-card-num">III</div>
+        <div class="type-card-info">
+          <div class="type-card-name">Lower</div>
+          <div class="type-card-sub">Legs · 4 movements + calves</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ACTIVE SESSION ========== -->
+  <div class="screen" id="screen-session">
+    <div class="topbar">
+      <button class="back" onclick="confirmAbandon()">← Back</button>
+      <span class="title">In Session</span>
+      <span style="width: 30px;"></span>
+    </div>
+    <div class="session-banner" id="sessionBanner">Upper · Back</div>
+    <div class="session-meta" id="sessionMeta">In progress</div>
+    <div class="walk-card" id="walk" onclick="toggleWalk()">
+      <div class="walk-text">1-mile walk<small id="walkSub">22 min · pre-lift</small></div>
+      <div class="walk-tap" id="walkTap">○</div>
+    </div>
+    <div class="section-label">Exercises</div>
+    <div class="exercise-list" id="exerciseList"></div>
+    <div class="body-figure-container">
+      <div class="body-toggle">
+        <button class="body-toggle-btn active" id="bodyFrontBtn" onclick="toggleBody('front')">Front</button>
+        <button class="body-toggle-btn" id="bodyBackBtn" onclick="toggleBody('back')">Back</button>
+      </div>
+      <div class="body-svg-wrap">
+        <svg id="bodyFront" viewBox="0 0 160 220" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="80" cy="18" rx="13" ry="16" class="muscle-region" data-muscle="head"/>
+          <rect x="74" y="32" width="12" height="8" class="muscle-region"/>
+          <ellipse cx="58" cy="46" rx="11" ry="9" class="muscle-region" data-muscle="side-delts"/>
+          <ellipse cx="102" cy="46" rx="11" ry="9" class="muscle-region" data-muscle="side-delts"/>
+          <path d="M 62,42 Q 62,68 78,68 Q 78,42 78,42 Z" class="muscle-region" data-muscle="chest"/>
+          <path d="M 98,42 Q 98,68 82,68 Q 82,42 82,42 Z" class="muscle-region" data-muscle="chest"/>
+          <ellipse cx="49" cy="65" rx="7" ry="14" class="muscle-region" data-muscle="biceps"/>
+          <ellipse cx="111" cy="65" rx="7" ry="14" class="muscle-region" data-muscle="biceps"/>
+          <ellipse cx="46" cy="92" rx="6" ry="14" class="muscle-region"/>
+          <ellipse cx="114" cy="92" rx="6" ry="14" class="muscle-region"/>
+          <rect x="68" y="66" width="24" height="38" rx="3" class="muscle-region" data-muscle="core"/>
+          <path d="M 60,68 Q 56,90 62,104 L 68,104 L 68,68 Z" class="muscle-region" data-muscle="core"/>
+          <path d="M 100,68 Q 104,90 98,104 L 92,104 L 92,68 Z" class="muscle-region" data-muscle="core"/>
+          <ellipse cx="68" cy="135" rx="11" ry="22" class="muscle-region" data-muscle="quads"/>
+          <ellipse cx="92" cy="135" rx="11" ry="22" class="muscle-region" data-muscle="quads"/>
+          <circle cx="68" cy="160" r="4" class="muscle-region"/>
+          <circle cx="92" cy="160" r="4" class="muscle-region"/>
+          <ellipse cx="68" cy="183" rx="7" ry="18" class="muscle-region"/>
+          <ellipse cx="92" cy="183" rx="7" ry="18" class="muscle-region"/>
+          <ellipse cx="68" cy="208" rx="7" ry="5" class="muscle-region"/>
+          <ellipse cx="92" cy="208" rx="7" ry="5" class="muscle-region"/>
+        </svg>
+        <svg id="bodyBack" class="hidden" viewBox="0 0 160 220" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="80" cy="18" rx="13" ry="16" class="muscle-region" data-muscle="head"/>
+          <rect x="74" y="32" width="12" height="8" class="muscle-region"/>
+          <path d="M 66,38 Q 80,32 94,38 L 90,52 L 70,52 Z" class="muscle-region" data-muscle="traps"/>
+          <ellipse cx="58" cy="48" rx="11" ry="9" class="muscle-region" data-muscle="rear-delts"/>
+          <ellipse cx="102" cy="48" rx="11" ry="9" class="muscle-region" data-muscle="rear-delts"/>
+          <path d="M 60,52 Q 58,80 70,98 L 78,98 L 78,52 Z" class="muscle-region" data-muscle="back"/>
+          <path d="M 100,52 Q 102,80 90,98 L 82,98 L 82,52 Z" class="muscle-region" data-muscle="back"/>
+          <rect x="70" y="52" width="20" height="46" class="muscle-region" data-muscle="back"/>
+          <ellipse cx="49" cy="65" rx="7" ry="14" class="muscle-region" data-muscle="triceps"/>
+          <ellipse cx="111" cy="65" rx="7" ry="14" class="muscle-region" data-muscle="triceps"/>
+          <ellipse cx="46" cy="92" rx="6" ry="14" class="muscle-region"/>
+          <ellipse cx="114" cy="92" rx="6" ry="14" class="muscle-region"/>
+          <rect x="68" y="98" width="24" height="14" rx="2" class="muscle-region" data-muscle="back"/>
+          <ellipse cx="72" cy="120" rx="10" ry="9" class="muscle-region" data-muscle="hams"/>
+          <ellipse cx="88" cy="120" rx="10" ry="9" class="muscle-region" data-muscle="hams"/>
+          <ellipse cx="68" cy="148" rx="11" ry="20" class="muscle-region" data-muscle="hams"/>
+          <ellipse cx="92" cy="148" rx="11" ry="20" class="muscle-region" data-muscle="hams"/>
+          <circle cx="68" cy="172" r="4" class="muscle-region"/>
+          <circle cx="92" cy="172" r="4" class="muscle-region"/>
+          <ellipse cx="68" cy="190" rx="8" ry="15" class="muscle-region" data-muscle="calves"/>
+          <ellipse cx="92" cy="190" rx="8" ry="15" class="muscle-region" data-muscle="calves"/>
+          <ellipse cx="68" cy="212" rx="7" ry="5" class="muscle-region"/>
+          <ellipse cx="92" cy="212" rx="7" ry="5" class="muscle-region"/>
+        </svg>
+      </div>
+      <div class="body-legend"><span style="color: #c44a3a;">Red</span> = trained this session</div>
+    </div>
+    <div class="session-actions">
+      <button class="primary-btn" onclick="finishSession()">Finish Session</button>
+      <button class="secondary-btn danger-btn" onclick="confirmAbandon()">Abandon Session</button>
+    </div>
+  </div>
+
+  <!-- ========== EXERCISE LOG (REP TARGET) ========== -->
+  <div class="screen" id="screen-logRep">
+    <div class="topbar">
+      <button class="back" onclick="returnToSession()">← Back</button>
+      <span class="title">Logging</span>
+      <div style="display: flex; gap: 10px;">
+        <button class="action" onclick="openSwapModal()">Swap</button>
+        <button class="action" onclick="skipExercise()">Skip</button>
+      </div>
+    </div>
+    <div class="log-header">
+      <div class="log-title" id="logRepTitle">Pull-ups</div>
+      <div class="log-sub" id="logRepSub">Bodyweight · Back</div>
+    </div>
+    <div class="last-time" id="logRepLast">No history yet</div>
+    <div class="rep-goal">
+      <div class="rep-goal-label">Target</div>
+      <div class="rep-goal-numbers" id="repGoalNumbers">0<span class="target"> / 25</span></div>
+      <div class="rep-goal-bar"><div class="rep-goal-fill" id="repGoalFill" style="width: 0%;"></div></div>
+    </div>
+    <div id="repSetsList"></div>
+    <div class="add-set" onclick="addRepSet()">+ Add another set</div>
+    <div class="feel-row" id="feelRowRep">
+      <div class="feel-btn" data-feel="hard"><span class="emoji">😅</span>Hard</div>
+      <div class="feel-btn selected" data-feel="ok"><span class="emoji">😐</span>On target</div>
+      <div class="feel-btn" data-feel="easy"><span class="emoji">😎</span>Easy</div>
+    </div>
+    <div class="log-actions">
+      <button class="primary-btn" onclick="finishExercise()">Done with this exercise</button>
+    </div>
+  </div>
+
+  <!-- ========== EXERCISE LOG (PLATE MATH) ========== -->
+  <div class="screen" id="screen-logPlate">
+    <div class="topbar">
+      <button class="back" onclick="returnToSession()">← Back</button>
+      <span class="title">Logging</span>
+      <div style="display: flex; gap: 10px;">
+        <button class="action" onclick="openSwapModal()">Swap</button>
+        <button class="action" onclick="skipExercise()">Skip</button>
+      </div>
+    </div>
+    <div class="log-header">
+      <div class="log-title" id="logPlateTitle">Incline Smith</div>
+      <div class="log-sub" id="logPlateSub">Smith bar · Chest</div>
+    </div>
+    <div class="last-time" id="logPlateLast">No history yet</div>
+    <div id="plateSetsList"></div>
+    <div class="add-set" onclick="addPlateSet()">+ Add another set</div>
+    <div class="feel-row" id="feelRowPlate">
+      <div class="feel-btn" data-feel="hard"><span class="emoji">😅</span>Hard</div>
+      <div class="feel-btn selected" data-feel="ok"><span class="emoji">😐</span>On target</div>
+      <div class="feel-btn" data-feel="easy"><span class="emoji">😎</span>Easy</div>
+    </div>
+    <div class="log-actions">
+      <button class="primary-btn" onclick="finishExercise()">Done with this exercise</button>
+    </div>
+  </div>
+
+  <!-- ========== EXERCISE LOG (SIMPLE) ========== -->
+  <div class="screen" id="screen-logSimple">
+    <div class="topbar">
+      <button class="back" onclick="returnToSession()">← Back</button>
+      <span class="title">Logging</span>
+      <div style="display: flex; gap: 10px;">
+        <button class="action" onclick="openSwapModal()">Swap</button>
+        <button class="action" onclick="skipExercise()">Skip</button>
+      </div>
+    </div>
+    <div class="log-header">
+      <div class="log-title" id="logSimpleTitle">DB Row</div>
+      <div class="log-sub" id="logSimpleSub">Dumbbell · Back</div>
+    </div>
+    <div class="last-time" id="logSimpleLast">No history yet</div>
+    <div id="simpleSetsList"></div>
+    <div class="add-set" onclick="addSimpleSet()">+ Add another set</div>
+    <div class="feel-row" id="feelRowSimple">
+      <div class="feel-btn" data-feel="hard"><span class="emoji">😅</span>Hard</div>
+      <div class="feel-btn selected" data-feel="ok"><span class="emoji">😐</span>On target</div>
+      <div class="feel-btn" data-feel="easy"><span class="emoji">😎</span>Easy</div>
+    </div>
+    <div class="log-actions">
+      <button class="primary-btn" onclick="finishExercise()">Done with this exercise</button>
+    </div>
+  </div>
+
+  <!-- ========== END OF SESSION SUMMARY ========== -->
+  <div class="screen" id="screen-summary">
+    <div class="summary-card">
+      <div class="summary-title">Session done</div>
+      <div class="summary-sub" id="summarySub">Upper · Back</div>
+    </div>
+    <div class="summary-stats">
+      <div class="summary-stat"><div class="summary-stat-num" id="summaryDone">0</div><div class="summary-stat-label">Done</div></div>
+      <div class="summary-stat"><div class="summary-stat-num" id="summarySets">0</div><div class="summary-stat-label">Sets</div></div>
+      <div class="summary-stat"><div class="summary-stat-num" id="summarySkipped">0</div><div class="summary-stat-label">Skipped</div></div>
+    </div>
+    <div class="section-label">Exercises</div>
+    <div class="summary-list" id="summaryList"></div>
+    <button class="primary-btn" onclick="closeSummary()">Back to Home</button>
+  </div>
+
+  <!-- ========== EAT HOME ========== -->
+  <div class="screen" id="screen-meal">
+    <div class="eat-title">Eat</div>
+    <div class="eat-subtitle" id="eatDateSub">Today</div>
+    <div class="eat-protein-section">
+      <div class="eat-protein-numbers">
+        <span id="eatProteinNum">0</span><span class="ep-target"> / 145g</span>
+      </div>
+      <div class="eat-protein-bar">
+        <div class="eat-protein-fill" id="eatProteinFill" style="width:0%"></div>
+      </div>
+      <div class="eat-protein-label" id="eatProteinLabel">145g to go</div>
+      <div class="eat-cal-line">Calories today: <span class="cal-num" id="eatCalNum">0</span></div>
+    </div>
+    <div class="section-label">Meals</div>
+    <div class="meal-grid" id="mealGrid"></div>
+  </div>
+
+  <!-- ========== EAT BUCKET DETAIL ========== -->
+  <div class="screen" id="screen-eatBucket">
+    <div class="topbar">
+      <button class="back" onclick="show('meal')">← Eat</button>
+      <span class="title" id="bucketScreenTitle">Lunch</span>
+      <span style="width: 40px;"></span>
+    </div>
+    <div id="bucketBody"></div>
+  </div>
+
+  <!-- ========== CFA MENU ========== -->
+  <div class="screen cfa-screen" id="screen-cfaMenu">
+    <div class="topbar">
+      <button class="back" onclick="show('eatBucket')">← Back</button>
+      <span class="title">Chick-fil-A</span>
+      <span style="width: 40px;"></span>
+    </div>
+
+    <div class="cfa-running-totals">
+      <div class="cfa-total-item">
+        <div class="cfa-total-num" id="cfaTotalProtein">0g</div>
+        <div class="cfa-total-label">Protein</div>
+      </div>
+      <div class="cfa-total-divider"></div>
+      <div class="cfa-total-item">
+        <div class="cfa-total-num" id="cfaTotalCal">0</div>
+        <div class="cfa-total-label">Calories</div>
+      </div>
+      <div class="cfa-total-divider"></div>
+      <div class="cfa-total-item">
+        <div class="cfa-total-num" id="cfaItemCount">0</div>
+        <div class="cfa-total-label">Items</div>
+      </div>
+    </div>
+
+    <div id="cfaMenuBody"></div>
+  </div>
+
+  <!-- CFA sticky log bar (outside screen div so it overlays) -->
+  <div class="cfa-sticky-bar" id="cfaStickyBar">
+    <button class="cfa-log-btn" onclick="logCFAOrder()">
+      Log this order
+      <span class="cfa-log-btn-sub" id="cfaStickySubtext">Select items above</span>
+    </button>
+  </div>
+
+  <!-- ========== CALENDAR (placeholder) ========== -->
+  <div class="screen" id="screen-calendar">
+    <div class="topbar">
+      <button class="back" onclick="show('home')">← Back</button>
+      <span class="title">Calendar</span>
+      <span style="width: 30px;"></span>
+    </div>
+    <div class="placeholder-card">
+      <div class="placeholder-icon">V</div>
+      <div class="placeholder-title">Monthly Calendar</div>
+      <div class="placeholder-sub">Coming in Stage 4</div>
+    </div>
+  </div>
+
+  <!-- ========== DASHBOARD (placeholder) ========== -->
+  <div class="screen" id="screen-dash">
+    <div class="topbar">
+      <button class="back" onclick="show('home')">← Back</button>
+      <span class="title">This Week</span>
+      <span style="width: 30px;"></span>
+    </div>
+    <div class="placeholder-card">
+      <div class="placeholder-icon">VI</div>
+      <div class="placeholder-title">Weekly Dashboard</div>
+      <div class="placeholder-sub">Coming in Stage 4</div>
+    </div>
+  </div>
+
+</div><!-- end .app -->
+
+<div class="nav-bar">
+  <button class="active" data-nav="home" onclick="show('home')">Home</button>
+  <button data-nav="session" onclick="show('sessionPicker')">Train</button>
+  <button data-nav="meal" onclick="show('meal')">Eat</button>
+  <button data-nav="calendar" onclick="show('calendar')">Cal</button>
+  <button data-nav="dash" onclick="show('dash')">Week</button>
+</div>
+
+<!-- SWAP MODAL -->
+<div class="modal-backdrop" id="swapModal" onclick="closeSwapModalOnBackdrop(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-grabber"></div>
+      <div class="modal-title">Swap exercise</div>
+      <div class="modal-sub" id="swapModalSub">Same muscle, same role</div>
+      <button class="modal-close" onclick="closeSwapModal()">×</button>
+    </div>
+    <div class="modal-body" id="swapModalBody"></div>
+  </div>
+</div>
+
+<!-- QUICK-LOG MODAL -->
+<div class="modal-backdrop" id="quickLogModal" onclick="closeQuickLogOnBackdrop(event)">
+  <div class="quicklog-modal">
+    <div class="modal-header">
+      <div class="modal-grabber"></div>
+      <div class="modal-title" id="quickLogTitle">Rear Delts</div>
+      <div class="modal-sub">Quick log · no session needed</div>
+      <button class="modal-close" onclick="closeQuickLog()">×</button>
+    </div>
+    <div class="modal-body" id="quickLogBody"></div>
+  </div>
+</div>
+
+<div class="build-badge">v1.0 · Stage 3.2</div>
+
+<script>
+/* ============================================================
+   MAESTER — Stage 3.1
+   Workout logging + Meal logging + CFA menu + Calories
+   ============================================================ */
+
+// ---------- NAVIGATION ----------
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + id);
+  if (target) target.classList.add('active');
+
+  const navMap = {
+    home: 'home',
+    sessionPicker: 'session',
+    session: 'session',
+    logRep: 'session',
+    logPlate: 'session',
+    logSimple: 'session',
+    summary: 'session',
+    meal: 'meal',
+    eatBucket: 'meal',
+    cfaMenu: 'meal',
+    calendar: 'calendar',
+    dash: 'dash'
+  };
+  document.querySelectorAll('.nav-bar button').forEach(b => {
+    b.classList.toggle('active', b.dataset.nav === navMap[id]);
+  });
+  document.querySelector('.app').scrollTop = 0;
+
+  // CFA sticky bar: only visible when on CFA screen
+  const stickyBar = document.getElementById('cfaStickyBar');
+  if (stickyBar) stickyBar.classList.toggle('visible', id === 'cfaMenu');
+
+  if (id === 'meal') renderEatHome();
+  if (id === 'home') renderScoreboard();
+}
+
+// ---------- DATE / GREETING ----------
+function updateGreeting() {
+  const now = new Date();
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  document.getElementById('date').textContent = `${days[now.getDay()]} · ${months[now.getMonth()]} ${now.getDate()}`;
+}
+
+// ---------- INDEXEDDB ----------
+const DB_NAME = 'MaesterDB';
+const DB_VERSION = 1;
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const database = e.target.result;
+      if (!database.objectStoreNames.contains('sessions')) {
+        const s = database.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true });
+        s.createIndex('date', 'date', { unique: false });
+      }
+      if (!database.objectStoreNames.contains('exercises')) {
+        const e2 = database.createObjectStore('exercises', { keyPath: 'id', autoIncrement: true });
+        e2.createIndex('sessionId', 'sessionId', { unique: false });
+        e2.createIndex('date', 'date', { unique: false });
+        e2.createIndex('name', 'name', { unique: false });
+      }
+      if (!database.objectStoreNames.contains('meals')) {
+        const m = database.createObjectStore('meals', { keyPath: 'id', autoIncrement: true });
+        m.createIndex('date', 'date', { unique: false });
+        m.createIndex('bucket', 'bucket', { unique: false });
+      }
+      if (!database.objectStoreNames.contains('weights')) {
+        const w = database.createObjectStore('weights', { keyPath: 'id', autoIncrement: true });
+        w.createIndex('date', 'date', { unique: false });
+      }
+      if (!database.objectStoreNames.contains('settings')) {
+        database.createObjectStore('settings', { keyPath: 'key' });
+      }
+      if (!database.objectStoreNames.contains('test')) {
+        database.createObjectStore('test', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function dbSave(storeName, record) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([storeName], 'readwrite');
+    const req = tx.objectStore(storeName).add(record);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+function dbUpdate(storeName, record) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([storeName], 'readwrite');
+    const req = tx.objectStore(storeName).put(record);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+function dbDelete(storeName, id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([storeName], 'readwrite');
+    const req = tx.objectStore(storeName).delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+function dbGetAll(storeName) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([storeName], 'readonly');
+    const req = tx.objectStore(storeName).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+function dbGetByIndex(storeName, indexName, value) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([storeName], 'readonly');
+    const idx = tx.objectStore(storeName).index(indexName);
+    const req = idx.getAll(value);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ---------- EXERCISE LIBRARY ----------
+const EXERCISE_LIBRARY = [
+  { name: 'Incline Smith Press', muscle: 'chest', role: 'compound', logType: 'plate' },
+  { name: 'Barbell Incline Press', muscle: 'chest', role: 'compound', logType: 'plate' },
+  { name: 'Incline DB Press', muscle: 'chest', role: 'compound', logType: 'simple' },
+  { name: 'Flat Barbell Press', muscle: 'chest', role: 'compound', logType: 'plate' },
+  { name: 'Flat DB Press', muscle: 'chest', role: 'compound', logType: 'simple' },
+  { name: 'Dips', muscle: 'chest', role: 'compound', logType: 'rep-target' },
+  { name: 'Cable Fly', muscle: 'chest', role: 'isolation', logType: 'simple' },
+  { name: 'Pec Deck', muscle: 'chest', role: 'isolation', logType: 'simple' },
+  { name: 'DB Fly', muscle: 'chest', role: 'isolation', logType: 'simple' },
+  { name: 'Pull-ups', muscle: 'back', role: 'compound', logType: 'rep-target' },
+  { name: 'Chin-ups', muscle: 'back', role: 'compound', logType: 'rep-target' },
+  { name: 'Lat Pulldown', muscle: 'back', role: 'compound', logType: 'simple' },
+  { name: 'Seated Cable Row', muscle: 'back', role: 'compound', logType: 'simple' },
+  { name: 'One-Arm DB Row', muscle: 'back', role: 'compound', logType: 'simple' },
+  { name: 'Barbell Row', muscle: 'back', role: 'compound', logType: 'plate' },
+  { name: 'T-Bar Row', muscle: 'back', role: 'compound', logType: 'simple' },
+  { name: 'Chest-Supported Row', muscle: 'back', role: 'compound', logType: 'simple' },
+  { name: 'Straight-Arm Pulldown', muscle: 'back', role: 'isolation', logType: 'simple' },
+  { name: 'Face Pull', muscle: 'back', role: 'isolation', logType: 'simple' },
+  { name: 'Barbell OHP', muscle: 'side-delts', role: 'compound', logType: 'plate' },
+  { name: 'DB Shoulder Press', muscle: 'side-delts', role: 'compound', logType: 'simple' },
+  { name: 'Lateral Raise', muscle: 'side-delts', role: 'isolation', logType: 'simple' },
+  { name: 'Cable Lateral Raise', muscle: 'side-delts', role: 'isolation', logType: 'simple' },
+  { name: 'Machine Lateral Raise', muscle: 'side-delts', role: 'isolation', logType: 'simple' },
+  { name: 'Rear Delt Fly', muscle: 'rear-delts', role: 'isolation', logType: 'simple' },
+  { name: 'Reverse Pec Deck', muscle: 'rear-delts', role: 'isolation', logType: 'simple' },
+  { name: 'Barbell Shrug', muscle: 'traps', role: 'isolation', logType: 'plate' },
+  { name: 'DB Shrug', muscle: 'traps', role: 'isolation', logType: 'simple' },
+  { name: 'Kelso Shrug', muscle: 'traps', role: 'isolation', logType: 'simple' },
+  { name: 'Barbell Curl', muscle: 'biceps', role: 'compound', logType: 'plate' },
+  { name: 'DB Curl', muscle: 'biceps', role: 'isolation', logType: 'simple' },
+  { name: 'Hammer Curl', muscle: 'biceps', role: 'isolation', logType: 'simple' },
+  { name: 'Preacher Curl', muscle: 'biceps', role: 'isolation', logType: 'simple' },
+  { name: 'Cable Curl', muscle: 'biceps', role: 'isolation', logType: 'simple' },
+  { name: 'Incline DB Curl', muscle: 'biceps', role: 'isolation', logType: 'simple' },
+  { name: 'Close Grip Bench', muscle: 'triceps', role: 'compound', logType: 'plate' },
+  { name: 'Skull Crushers', muscle: 'triceps', role: 'compound', logType: 'simple' },
+  { name: 'Tricep Pushdown', muscle: 'triceps', role: 'isolation', logType: 'simple' },
+  { name: 'Overhead Cable Extension', muscle: 'triceps', role: 'isolation', logType: 'simple' },
+  { name: 'DB Tricep Extension', muscle: 'triceps', role: 'isolation', logType: 'simple' },
+  { name: 'Barbell Back Squat', muscle: 'quads', role: 'compound', logType: 'plate' },
+  { name: 'Smith Machine Squat', muscle: 'quads', role: 'compound', logType: 'plate' },
+  { name: 'Hack Squat', muscle: 'quads', role: 'compound', logType: 'plate' },
+  { name: 'Leg Press', muscle: 'quads', role: 'compound', logType: 'simple' },
+  { name: 'Front Squat', muscle: 'quads', role: 'compound', logType: 'plate' },
+  { name: 'Bulgarian Split Squat', muscle: 'quads', role: 'compound', logType: 'simple' },
+  { name: 'Smith Bulgarian Split Squat', muscle: 'quads', role: 'compound', logType: 'plate' },
+  { name: 'Walking Lunges', muscle: 'quads', role: 'compound', logType: 'simple' },
+  { name: 'Goblet Squat', muscle: 'quads', role: 'compound', logType: 'simple' },
+  { name: 'Leg Extension', muscle: 'quads', role: 'isolation', logType: 'simple' },
+  { name: 'Sissy Squat', muscle: 'quads', role: 'isolation', logType: 'rep-target' },
+  { name: 'Conventional Deadlift', muscle: 'hams', role: 'compound', logType: 'plate' },
+  { name: 'Romanian Deadlift', muscle: 'hams', role: 'compound', logType: 'plate' },
+  { name: 'Sumo Deadlift', muscle: 'hams', role: 'compound', logType: 'plate' },
+  { name: 'Hip Thrust', muscle: 'hams', role: 'compound', logType: 'plate' },
+  { name: 'Good Morning', muscle: 'hams', role: 'compound', logType: 'plate' },
+  { name: 'Lying Leg Curl', muscle: 'hams', role: 'isolation', logType: 'simple' },
+  { name: 'Seated Leg Curl', muscle: 'hams', role: 'isolation', logType: 'simple' },
+  { name: 'Nordic Curl', muscle: 'hams', role: 'isolation', logType: 'rep-target' },
+  { name: 'Standing Calf Raise', muscle: 'calves', role: 'isolation', logType: 'simple' },
+  { name: 'Seated Calf Raise', muscle: 'calves', role: 'isolation', logType: 'simple' },
+  { name: 'Plank', muscle: 'core', role: 'isolation', logType: 'rep-target' },
+  { name: 'Cable Crunch', muscle: 'core', role: 'isolation', logType: 'simple' },
+  { name: 'Hanging Leg Raise', muscle: 'core', role: 'isolation', logType: 'rep-target' },
+  { name: 'Ab Wheel', muscle: 'core', role: 'isolation', logType: 'rep-target' }
+];
+
+function findExercise(name) { return EXERCISE_LIBRARY.find(e => e.name === name); }
+function filterExercises(muscle, role) { return EXERCISE_LIBRARY.filter(e => e.muscle === muscle && e.role === role); }
+
+// ---------- SESSION TEMPLATES ----------
+const SESSION_TEMPLATES = {
+  'upper-chest': {
+    name: 'Upper · Chest', label: 'Chest emphasis',
+    slots: [
+      { exerciseName: 'Incline Smith Press', target: '3-4 sets x 8-12' },
+      { exerciseName: 'Flat DB Press', target: '3 sets x 8-12' },
+      { exerciseName: 'Lateral Raise', target: '3 sets x 12-15' }
+    ]
+  },
+  'upper-back': {
+    name: 'Upper · Back', label: 'Back emphasis',
+    slots: [
+      { exerciseName: 'Pull-ups', target: 25 },
+      { exerciseName: 'Seated Cable Row', target: '3 sets x 8-12' },
+      { exerciseName: 'One-Arm DB Row', target: '3 sets x 10-12' }
+    ]
+  },
+  'lower': {
+    name: 'Lower', label: 'Legs',
+    slots: [
+      { exerciseName: 'Hack Squat', target: '3-4 sets x 8-12' },
+      { exerciseName: 'Lying Leg Curl', target: '3 sets x 10-12' },
+      { exerciseName: 'Leg Extension', target: '3 sets x 12-15' },
+      { exerciseName: 'Standing Calf Raise', target: '3 sets x 15-20' }
+    ]
+  }
+};
+
+const MUSCLE_TO_REGIONS = {
+  'chest': ['chest'], 'back': ['back', 'biceps'], 'biceps': ['biceps'],
+  'triceps': ['triceps'], 'side-delts': ['side-delts'], 'rear-delts': ['rear-delts'],
+  'traps': ['traps'], 'quads': ['quads'], 'hams': ['hams'],
+  'calves': ['calves'], 'core': ['core']
+};
+
+// ---------- ACTIVE SESSION STATE ----------
+let activeSession = null;
+let currentExercise = null;
+
+async function startSession(type) {
+  const template = SESSION_TEMPLATES[type];
+  if (!template) return;
+  const now = new Date();
+  const sessionId = await dbSave('sessions', {
+    type, name: template.name, date: isoDate(now),
+    startTime: now.toISOString(), endTime: null, walkDone: false, finished: false
+  });
+  activeSession = {
+    sessionId, type, name: template.name, label: template.label,
+    startTime: now.toISOString(), walkDone: false,
+    exercises: template.slots.map((slot, i) => {
+      const lib = findExercise(slot.exerciseName);
+      return {
+        idx: i, name: slot.exerciseName,
+        muscle: lib ? lib.muscle : 'unknown', role: lib ? lib.role : 'compound',
+        logType: lib ? lib.logType : 'simple', target: slot.target,
+        status: 'pending', sets: [], feel: 'ok', exerciseId: null
+      };
+    })
+  };
+  renderSession();
+  show('session');
+}
+
+function renderSession() {
+  if (!activeSession) return;
+  document.getElementById('sessionBanner').textContent = activeSession.name;
+  document.getElementById('sessionMeta').textContent = activeSession.label;
+  const walk = document.getElementById('walk');
+  const walkTap = document.getElementById('walkTap');
+  walk.classList.toggle('done', activeSession.walkDone);
+  walkTap.textContent = activeSession.walkDone ? '✓' : '○';
+  const list = document.getElementById('exerciseList');
+  list.innerHTML = '';
+  activeSession.exercises.forEach((ex, i) => {
+    const row = document.createElement('div');
+    row.className = 'exercise-row' + (ex.status === 'done' ? ' done' : '') + (ex.status === 'skipped' ? ' skipped' : '');
+    row.onclick = () => openExercise(i);
+    let circleContent = (i + 1).toString();
+    if (ex.status === 'done') circleContent = '✓';
+    if (ex.status === 'skipped') circleContent = '–';
+    let targetText = ex.target;
+    if (ex.status === 'done' && ex.sets.length > 0) {
+      const totalReps = ex.sets.reduce((a, s) => a + (s.reps || 0), 0);
+      targetText = `${ex.sets.length} sets · ${totalReps} reps total`;
+    } else if (ex.status === 'skipped') { targetText = 'Skipped'; }
+    else if (ex.logType === 'rep-target') { targetText = `Target: ${ex.target} reps`; }
+    row.innerHTML = `
+      <div class="exercise-circle">${circleContent}</div>
+      <div class="exercise-info">
+        <div class="exercise-name">${ex.name}</div>
+        <div class="exercise-target">${targetText}</div>
+      </div>`;
+    list.appendChild(row);
+  });
+  updateBodyFigure();
+}
+
+function updateBodyFigure() {
+  document.querySelectorAll('.muscle-region').forEach(r => r.classList.remove('active'));
+  if (!activeSession) return;
+  const activeMuscles = new Set();
+  activeSession.exercises.forEach(ex => {
+    if (ex.status === 'done') {
+      (MUSCLE_TO_REGIONS[ex.muscle] || [ex.muscle]).forEach(r => activeMuscles.add(r));
+    }
+  });
+  activeMuscles.forEach(m => {
+    document.querySelectorAll(`[data-muscle="${m}"]`).forEach(r => r.classList.add('active'));
+  });
+}
+
+function toggleBody(view) {
+  document.getElementById('bodyFront').classList.toggle('hidden', view !== 'front');
+  document.getElementById('bodyBack').classList.toggle('hidden', view !== 'back');
+  document.getElementById('bodyFrontBtn').classList.toggle('active', view === 'front');
+  document.getElementById('bodyBackBtn').classList.toggle('active', view === 'back');
+}
+
+async function toggleWalk() {
+  if (!activeSession) return;
+  activeSession.walkDone = !activeSession.walkDone;
+  const sessions = await dbGetAll('sessions');
+  const sess = sessions.find(s => s.id === activeSession.sessionId);
+  if (sess) { sess.walkDone = activeSession.walkDone; await dbUpdate('sessions', sess); }
+  renderSession();
+}
+
+// ---------- EXERCISE LOGGING ----------
+function openExercise(idx) {
+  if (!activeSession) return;
+  const ex = activeSession.exercises[idx];
+  if (ex.status === 'done' || ex.status === 'skipped') return;
+  currentExercise = ex;
+  if (ex.sets.length === 0) ex.sets.push(getStarterSet(ex.logType));
+  if (ex.logType === 'rep-target') { renderRepTargetScreen(); show('logRep'); }
+  else if (ex.logType === 'plate') { renderPlateScreen(); show('logPlate'); }
+  else { renderSimpleScreen(); show('logSimple'); }
+}
+
+function getStarterSet(logType) {
+  if (logType === 'rep-target') return { reps: 8 };
+  if (logType === 'plate') return { plates: 1, extras: [], reps: 10 };
+  return { weight: 50, reps: 10 };
+}
+
+function renderRepTargetScreen() {
+  const ex = currentExercise;
+  document.getElementById('logRepTitle').textContent = ex.name;
+  document.getElementById('logRepSub').textContent = `Bodyweight · ${capitalize(ex.muscle)}`;
+  loadLastTime(ex, 'logRepLast');
+  updateRepGoal();
+  renderRepSets();
+  document.querySelectorAll('#feelRowRep .feel-btn').forEach(b => b.classList.remove('selected'));
+  const sel = document.querySelector(`#feelRowRep .feel-btn[data-feel="${ex.feel}"]`);
+  if (sel) sel.classList.add('selected');
+}
+
+function renderRepSets() {
+  const list = document.getElementById('repSetsList');
+  list.innerHTML = '';
+  currentExercise.sets.forEach((set, i) => {
+    const card = document.createElement('div');
+    card.className = 'set-card' + (set.done ? ' done' : '');
+    card.innerHTML = `
+      <span class="set-num">Set ${i + 1}</span>
+      <div class="stepper">
+        <button onclick="repAdjust(${i}, -1)">−</button>
+        <span class="stepper-value">${set.reps}</span>
+        <button onclick="repAdjust(${i}, 1)">+</button>
+      </div>
+      <span class="set-label">reps</span>
+      <div class="set-check" onclick="repToggleDone(${i})">${set.done ? '✓' : '○'}</div>`;
+    list.appendChild(card);
+  });
+}
+
+function repAdjust(i, delta) { currentExercise.sets[i].reps = Math.max(0, currentExercise.sets[i].reps + delta); renderRepSets(); updateRepGoal(); }
+function repToggleDone(i) { currentExercise.sets[i].done = !currentExercise.sets[i].done; renderRepSets(); updateRepGoal(); }
+function addRepSet() { currentExercise.sets.push({ reps: 5 }); renderRepSets(); }
+function updateRepGoal() {
+  const total = currentExercise.sets.filter(s => s.done).reduce((a, s) => a + s.reps, 0);
+  const target = currentExercise.target;
+  document.getElementById('repGoalNumbers').innerHTML = `${total}<span class="target"> / ${target}</span>`;
+  document.getElementById('repGoalFill').style.width = Math.min(100, (total / target) * 100) + '%';
+}
+
+function renderPlateScreen() {
+  const ex = currentExercise;
+  document.getElementById('logPlateTitle').textContent = ex.name;
+  document.getElementById('logPlateSub').textContent = `Plate math · ${capitalize(ex.muscle)}`;
+  loadLastTime(ex, 'logPlateLast');
+  renderPlateSets();
+  document.querySelectorAll('#feelRowPlate .feel-btn').forEach(b => b.classList.remove('selected'));
+  const sel = document.querySelector(`#feelRowPlate .feel-btn[data-feel="${ex.feel}"]`);
+  if (sel) sel.classList.add('selected');
+}
+
+function renderPlateSets() {
+  const list = document.getElementById('plateSetsList');
+  list.innerHTML = '';
+  currentExercise.sets.forEach((set, i) => {
+    if (!set.extras) set.extras = [];
+    const card = document.createElement('div');
+    card.className = 'set-card set-card-plate' + (set.done ? ' done' : '');
+    card.innerHTML = `
+      <div class="set-card-plate-row">
+        <span class="set-num">Set ${i + 1}</span>
+        <div class="set-check" onclick="plateToggleDone(${i})">${set.done ? '✓' : '○'}</div>
+      </div>
+      <div class="plate-row">
+        <span class="plate-label">Plates/side</span>
+        <div class="stepper">
+          <button onclick="plateAdjust(${i}, -1)">−</button>
+          <span class="stepper-value">${set.plates}</span>
+          <button onclick="plateAdjust(${i}, 1)">+</button>
+        </div>
+        <div class="extras-buttons">
+          <button class="extras-btn ${set.extras.includes(5) ? 'active' : ''}" onclick="plateToggleExtra(${i}, 5)">+5</button>
+          <button class="extras-btn ${set.extras.includes(10) ? 'active' : ''}" onclick="plateToggleExtra(${i}, 10)">+10</button>
+          <button class="extras-btn ${set.extras.includes(25) ? 'active' : ''}" onclick="plateToggleExtra(${i}, 25)">+25</button>
+        </div>
+      </div>
+      <div class="plate-row">
+        <span class="plate-label">Reps</span>
+        <div class="stepper">
+          <button onclick="plateRepAdjust(${i}, -1)">−</button>
+          <span class="stepper-value">${set.reps}</span>
+          <button onclick="plateRepAdjust(${i}, 1)">+</button>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function plateAdjust(i, delta) { currentExercise.sets[i].plates = Math.max(0, currentExercise.sets[i].plates + delta); renderPlateSets(); }
+function plateRepAdjust(i, delta) { currentExercise.sets[i].reps = Math.max(0, currentExercise.sets[i].reps + delta); renderPlateSets(); }
+function plateToggleExtra(i, val) {
+  const set = currentExercise.sets[i];
+  if (!set.extras) set.extras = [];
+  set.extras = set.extras.includes(val) ? set.extras.filter(e => e !== val) : [...set.extras, val];
+  renderPlateSets();
+}
+function plateToggleDone(i) { currentExercise.sets[i].done = !currentExercise.sets[i].done; renderPlateSets(); }
+function addPlateSet() { currentExercise.sets.push({ plates: 1, extras: [], reps: 10 }); renderPlateSets(); }
+
+function renderSimpleScreen() {
+  const ex = currentExercise;
+  document.getElementById('logSimpleTitle').textContent = ex.name;
+  document.getElementById('logSimpleSub').textContent = capitalize(ex.muscle);
+  loadLastTime(ex, 'logSimpleLast');
+  renderSimpleSets();
+  document.querySelectorAll('#feelRowSimple .feel-btn').forEach(b => b.classList.remove('selected'));
+  const sel = document.querySelector(`#feelRowSimple .feel-btn[data-feel="${ex.feel}"]`);
+  if (sel) sel.classList.add('selected');
+}
+
+function renderSimpleSets() {
+  const list = document.getElementById('simpleSetsList');
+  list.innerHTML = '';
+  currentExercise.sets.forEach((set, i) => {
+    const card = document.createElement('div');
+    card.className = 'set-card set-card-plate' + (set.done ? ' done' : '');
+    card.innerHTML = `
+      <div class="set-card-plate-row">
+        <span class="set-num">Set ${i + 1}</span>
+        <div class="set-check" onclick="simpleToggleDone(${i})">${set.done ? '✓' : '○'}</div>
+      </div>
+      <div class="plate-row">
+        <span class="plate-label">Weight</span>
+        <div class="stepper">
+          <button onclick="simpleWeightAdjust(${i}, -5)">−</button>
+          <span class="stepper-value">${set.weight}</span>
+          <button onclick="simpleWeightAdjust(${i}, 5)">+</button>
+        </div>
+        <span class="set-label">lb</span>
+      </div>
+      <div class="plate-row">
+        <span class="plate-label">Reps</span>
+        <div class="stepper">
+          <button onclick="simpleRepAdjust(${i}, -1)">−</button>
+          <span class="stepper-value">${set.reps}</span>
+          <button onclick="simpleRepAdjust(${i}, 1)">+</button>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function simpleWeightAdjust(i, delta) { currentExercise.sets[i].weight = Math.max(0, currentExercise.sets[i].weight + delta); renderSimpleSets(); }
+function simpleRepAdjust(i, delta) { currentExercise.sets[i].reps = Math.max(0, currentExercise.sets[i].reps + delta); renderSimpleSets(); }
+function simpleToggleDone(i) { currentExercise.sets[i].done = !currentExercise.sets[i].done; renderSimpleSets(); }
+function addSimpleSet() {
+  const last = currentExercise.sets[currentExercise.sets.length - 1];
+  currentExercise.sets.push({ weight: last ? last.weight : 50, reps: 10 });
+  renderSimpleSets();
+}
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.feel-btn');
+  if (!btn) return;
+  const row = btn.parentElement;
+  row.querySelectorAll('.feel-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if (currentExercise) currentExercise.feel = btn.dataset.feel;
+});
+
+async function loadLastTime(ex, elId) {
+  const el = document.getElementById(elId);
+  try {
+    const all = await dbGetByIndex('exercises', 'name', ex.name);
+    if (!all || all.length === 0) { el.textContent = 'No history yet'; return; }
+    all.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    const last = all[0];
+    if (!last.sets || last.sets.length === 0) { el.textContent = 'No completed sets last time'; return; }
+    const summary = last.sets.map(s => {
+      if (s.plates !== undefined) { const ex = s.extras && s.extras.length ? '+' + s.extras.join('+') : ''; return `${s.plates}pl${ex}×${s.reps}`; }
+      if (s.weight !== undefined) return `${s.weight}×${s.reps}`;
+      return `${s.reps}r`;
+    }).join(', ');
+    el.textContent = `Last: ${summary}`;
+  } catch (err) { el.textContent = 'No history yet'; }
+}
+
+async function finishExercise() {
+  if (!currentExercise || !activeSession) return;
+  const completedSets = currentExercise.sets.filter(s => s.done);
+  if (completedSets.length === 0) {
+    if (!confirm('No sets marked done. Mark this exercise as done anyway?')) return;
+  }
+  const id = await dbSave('exercises', {
+    sessionId: activeSession.sessionId, date: isoDate(new Date()),
+    name: currentExercise.name, muscle: currentExercise.muscle,
+    logType: currentExercise.logType, sets: completedSets,
+    feel: currentExercise.feel, timestamp: new Date().toISOString()
+  });
+  currentExercise.exerciseId = id;
+  currentExercise.status = 'done';
+  currentExercise = null;
+  renderSession();
+  show('session');
+}
+
+async function skipExercise() {
+  if (!currentExercise || !activeSession) return;
+  if (!confirm(`Skip ${currentExercise.name}?`)) return;
+  currentExercise.status = 'skipped';
+  await dbSave('exercises', {
+    sessionId: activeSession.sessionId, date: isoDate(new Date()),
+    name: currentExercise.name, muscle: currentExercise.muscle,
+    logType: currentExercise.logType, sets: [], skipped: true,
+    timestamp: new Date().toISOString()
+  });
+  currentExercise = null;
+  renderSession();
+  show('session');
+}
+
+// ---------- SWAP MODAL ----------
+function openSwapModal() {
+  if (!currentExercise) return;
+  const modal = document.getElementById('swapModal');
+  const body = document.getElementById('swapModalBody');
+  const muscle = currentExercise.muscle;
+  const role = currentExercise.role || 'compound';
+  document.getElementById('swapModalSub').textContent = `${capitalize(muscle)} · ${capitalize(role)}`;
+  const alternatives = filterExercises(muscle, role);
+  body.innerHTML = '';
+  alternatives.forEach(ex => {
+    const row = document.createElement('div');
+    row.className = 'swap-row' + (ex.name === currentExercise.name ? ' current' : '');
+    row.innerHTML = `
+      <div class="swap-name">${ex.name}</div>
+      <div class="swap-tag ${ex.name === currentExercise.name ? 'current' : ''}">${ex.name === currentExercise.name ? 'Current' : 'Tap to swap'}</div>`;
+    if (ex.name !== currentExercise.name) row.onclick = () => performSwap(ex.name);
+    body.appendChild(row);
+  });
+  const custom = document.createElement('div');
+  custom.className = 'add-custom-section';
+  custom.innerHTML = `
+    <div class="add-custom-label">Not in the list?</div>
+    <input type="text" class="add-custom-input" id="customExerciseInput" placeholder="Exercise name">
+    <button class="add-custom-btn" onclick="addCustomExercise()">Add & swap</button>`;
+  body.appendChild(custom);
+  modal.classList.add('active');
+  body.scrollTop = 0;
+}
+
+function closeSwapModal() { document.getElementById('swapModal').classList.remove('active'); }
+function closeSwapModalOnBackdrop(e) { if (e.target.id === 'swapModal') closeSwapModal(); }
+
+function performSwap(newName) {
+  if (!currentExercise || !activeSession) return;
+  const lib = findExercise(newName);
+  if (!lib) { alert('Exercise not found'); return; }
+  const ex = activeSession.exercises[currentExercise.idx];
+  Object.assign(ex, { name: lib.name, muscle: lib.muscle, role: lib.role, logType: lib.logType, sets: [] });
+  currentExercise = ex;
+  closeSwapModal();
+  ex.sets.push(getStarterSet(ex.logType));
+  if (ex.logType === 'rep-target') { renderRepTargetScreen(); show('logRep'); }
+  else if (ex.logType === 'plate') { renderPlateScreen(); show('logPlate'); }
+  else { renderSimpleScreen(); show('logSimple'); }
+}
+
+function addCustomExercise() {
+  const input = document.getElementById('customExerciseInput');
+  const name = (input.value || '').trim();
+  if (!name) { alert('Type a name first'); return; }
+  const newEntry = { name, muscle: currentExercise.muscle, role: currentExercise.role || 'compound', logType: currentExercise.logType || 'simple', custom: true };
+  EXERCISE_LIBRARY.push(newEntry);
+  persistCustomExercise(newEntry);
+  performSwap(name);
+}
+
+async function persistCustomExercise(entry) {
+  try {
+    const tx = db.transaction(['settings'], 'readwrite');
+    const store = tx.objectStore('settings');
+    const req = store.get('customExercises');
+    req.onsuccess = () => {
+      const existing = req.result ? req.result.value : [];
+      existing.push(entry);
+      store.put({ key: 'customExercises', value: existing });
+    };
+  } catch (err) { console.warn('Failed to persist custom exercise:', err); }
+}
+
+async function loadCustomExercises() {
+  try {
+    const tx = db.transaction(['settings'], 'readonly');
+    const store = tx.objectStore('settings');
+    const req = store.get('customExercises');
+    return new Promise((resolve) => {
+      req.onsuccess = () => {
+        const list = req.result ? req.result.value : [];
+        list.forEach(entry => { if (!EXERCISE_LIBRARY.find(e => e.name === entry.name)) EXERCISE_LIBRARY.push(entry); });
+        resolve();
+      };
+      req.onerror = () => resolve();
+    });
+  } catch (err) { console.warn('Failed to load custom exercises:', err); }
+}
+
+function returnToSession() { show('session'); }
+
+async function finishSession() {
+  if (!activeSession) return;
+  const done = activeSession.exercises.filter(e => e.status === 'done').length;
+  if (done === 0 && !confirm('No exercises completed. Finish anyway?')) return;
+  const sessions = await dbGetAll('sessions');
+  const sess = sessions.find(s => s.id === activeSession.sessionId);
+  if (sess) { sess.endTime = new Date().toISOString(); sess.finished = true; sess.walkDone = activeSession.walkDone; await dbUpdate('sessions', sess); }
+  renderSummary();
+  show('summary');
+}
+
+function confirmAbandon() {
+  if (!activeSession) { show('home'); return; }
+  const done = activeSession.exercises.filter(e => e.status === 'done').length;
+  if (done === 0) { activeSession = null; show('home'); return; }
+  if (confirm(`Abandon session? ${done} exercise(s) logged will be saved.`)) { activeSession = null; show('home'); }
+}
+
+function renderSummary() {
+  const done = activeSession.exercises.filter(e => e.status === 'done');
+  const skipped = activeSession.exercises.filter(e => e.status === 'skipped');
+  const totalSets = done.reduce((a, e) => a + e.sets.filter(s => s.done).length, 0);
+  document.getElementById('summarySub').textContent = activeSession.name;
+  document.getElementById('summaryDone').textContent = done.length;
+  document.getElementById('summarySets').textContent = totalSets;
+  document.getElementById('summarySkipped').textContent = skipped.length;
+  const list = document.getElementById('summaryList');
+  list.innerHTML = '';
+  activeSession.exercises.forEach(ex => {
+    const item = document.createElement('div');
+    item.className = 'summary-list-item';
+    let metaText = 'Not done', metaClass = '';
+    if (ex.status === 'done') { metaText = `${ex.sets.filter(s => s.done).length} sets ✓`; metaClass = 'done'; }
+    else if (ex.status === 'skipped') { metaText = 'Skipped'; metaClass = 'skipped'; }
+    item.innerHTML = `<span class="summary-list-name">${ex.name}</span><span class="summary-list-meta ${metaClass}">${metaText}</span>`;
+    list.appendChild(item);
+  });
+}
+
+function closeSummary() { activeSession = null; currentExercise = null; loadHomeStats(); renderScoreboard(); show('home'); }
+
+// ---------- HELPERS ----------
+function isoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function capitalize(s) {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1).replace('-', ' ');
+}
+function escStr(s) { return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
+// ---------- HOME STATS ----------
+async function loadHomeStats() {
+  try {
+    const sessions = await dbGetAll('sessions');
+    const finished = sessions.filter(s => s.finished);
+    const exercises = await dbGetAll('exercises');
+    const completed = exercises.filter(e => !e.skipped);
+    const titleEl = document.getElementById('quickStatsTitle');
+    titleEl.textContent = finished.length === 0
+      ? 'No sessions yet'
+      : `${finished.length} session${finished.length === 1 ? '' : 's'} · ${completed.length} exercises logged`;
+  } catch (err) { console.error(err); }
+}
+
+// ---------- WEEKLY SCOREBOARD ----------
+
+// Get Monday of current week as isoDate string
+function getWeekStart() {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun, 1=Mon...
+  const diff = (day === 0) ? -6 : 1 - day; // shift to Monday
+  const mon = new Date(now);
+  mon.setDate(now.getDate() + diff);
+  return isoDate(mon);
+}
+
+// Get Sunday of current week
+function getWeekEnd() {
+  const mon = new Date(getWeekStart());
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  return isoDate(sun);
+}
+
+// Count how many times each tracked muscle was hit this week
+async function getWeekScoreboard() {
+  try {
+    const weekStart = getWeekStart();
+    const weekEnd = getWeekEnd();
+    const allExercises = await dbGetAll('exercises');
+    const thisWeek = allExercises.filter(e => e.date >= weekStart && e.date <= weekEnd && !e.skipped);
+    const counts = { 'rear-delts': 0, 'traps': 0, 'core': 0 };
+    thisWeek.forEach(e => {
+      if (counts[e.muscle] !== undefined) counts[e.muscle]++;
+    });
+    return counts;
+  } catch (err) { return { 'rear-delts': 0, 'traps': 0, 'core': 0 }; }
+}
+
+// Render the scoreboard dots on home screen
+async function renderScoreboard() {
+  try {
+    const counts = await getWeekScoreboard();
+    const targets = { 'rear-delts': 2, 'traps': 2, 'core': 3 };
+
+    // Week label e.g. "Apr 7 – Apr 13"
+    const weekStart = new Date(getWeekStart() + 'T12:00:00');
+    const weekEnd = new Date(getWeekEnd() + 'T12:00:00');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const label = `${months[weekStart.getMonth()]} ${weekStart.getDate()} – ${months[weekEnd.getMonth()]} ${weekEnd.getDate()}`;
+    const weekLabelEl = document.getElementById('scoreboardWeekLabel');
+    if (weekLabelEl) weekLabelEl.textContent = label;
+
+    Object.entries(targets).forEach(([muscle, target]) => {
+      const container = document.getElementById(`dots-${muscle}`);
+      if (!container) return;
+      const count = counts[muscle] || 0;
+      const allDone = count >= target;
+      container.innerHTML = '';
+      for (let i = 0; i < target; i++) {
+        const dot = document.createElement('div');
+        const isFilled = i < count;
+        dot.className = 'scoreboard-dot' + (isFilled ? (allDone ? ' filled complete' : ' filled') : '');
+        container.appendChild(dot);
+      }
+    });
+  } catch (err) { console.error('renderScoreboard:', err); }
+}
+
+// Quick-log exercises per muscle
+const QUICKLOG_EXERCISES = {
+  'rear-delts': [
+    { name: 'Face Pull', logType: 'simple' },
+    { name: 'Rear Delt Fly', logType: 'simple' },
+    { name: 'Reverse Pec Deck', logType: 'simple' }
+  ],
+  'traps': [
+    { name: 'DB Shrug', logType: 'simple' },
+    { name: 'Barbell Shrug', logType: 'plate' },
+    { name: 'Kelso Shrug', logType: 'simple' }
+  ],
+  'core': [
+    { name: 'Cable Crunch', logType: 'simple' },
+    { name: 'Hanging Leg Raise', logType: 'rep-target' },
+    { name: 'Ab Wheel', logType: 'rep-target' },
+    { name: 'Plank', logType: 'rep-target' }
+  ]
+};
+
+let quickLogMuscle = null;
+
+function openQuickLog(muscle) {
+  quickLogMuscle = muscle;
+  const labels = { 'rear-delts': 'Rear Delts', 'traps': 'Traps', 'core': 'Abs' };
+  const titleEl = document.getElementById('quickLogTitle');
+  if (titleEl) titleEl.textContent = labels[muscle] || capitalize(muscle);
+
+  const body = document.getElementById('quickLogBody');
+  if (!body) return;
+  body.innerHTML = '';
+
+  const options = QUICKLOG_EXERCISES[muscle] || [];
+  options.forEach(ex => {
+    const row = document.createElement('div');
+    row.className = 'quicklog-option';
+    row.innerHTML = `
+      <div class="quicklog-option-name">${ex.name}</div>
+      <div class="quicklog-option-arrow">→</div>`;
+    row.onclick = () => logQuickSet(ex.name, muscle);
+    body.appendChild(row);
+  });
+
+  document.getElementById('quickLogModal').classList.add('active');
+}
+
+function closeQuickLog() {
+  document.getElementById('quickLogModal').classList.remove('active');
+  quickLogMuscle = null;
+}
+function closeQuickLogOnBackdrop(e) {
+  if (e.target.id === 'quickLogModal') closeQuickLog();
+}
+
+async function logQuickSet(exerciseName, muscle) {
+  try {
+    const lib = findExercise(exerciseName);
+    await dbSave('exercises', {
+      sessionId: null,
+      date: isoDate(new Date()),
+      name: exerciseName,
+      muscle: muscle,
+      logType: lib ? lib.logType : 'simple',
+      sets: [{ done: true, reps: 10, weight: 0 }], // placeholder set — just records the hit
+      feel: 'ok',
+      quickLog: true,
+      timestamp: new Date().toISOString()
+    });
+    closeQuickLog();
+    await renderScoreboard();
+  } catch (err) { console.error('logQuickSet:', err); }
+}
+
+// ============================================================
+// MEAL LOGGING — STAGE 3
+// ============================================================
+
+const PROTEIN_TARGET = 145;
+
+// Meal presets (non-CFA)
+const MEAL_PRESETS = {
+  breakfast: [
+    { name: 'HB Eggs + Bagel', protein: 30, calories: 480 },
+    { name: 'Oatmeal + PB', protein: 12, calories: 380 }
+  ]
+};
+
+// Keyword protein estimation for typed meals
+function estimateProtein(text) {
+  const t = text.toLowerCase();
+  let g = 0;
+  if (/chicken/.test(t)) g += 25;
+  if (/turkey/.test(t)) g += 22;
+  if (/steak|beef|burger/.test(t)) g += 30;
+  if (/fish|salmon|tuna/.test(t)) g += 25;
+  if (/pork/.test(t)) g += 25;
+  if (/egg/.test(t)) g += 12;
+  if (/shake|protein|whey|casein/.test(t)) g += 25;
+  if (/greek yogurt/.test(t)) g += 17;
+  else if (/yogurt/.test(t)) g += 10;
+  if (/cheese/.test(t)) g += 8;
+  if (/pb|peanut butter/.test(t)) g += 8;
+  if (/jerky/.test(t)) g += 12;
+  if (/bacon/.test(t)) g += 10;
+  if (/bean|lentil/.test(t)) g += 12;
+  if (/rice|pasta|bread|bagel|oatmeal/.test(t)) g += 4;
+  if (/nugget|grilled chicken/.test(t)) g += 38;
+  return Math.max(g, 5);
+}
+
+async function getTodayMeals() { return dbGetByIndex('meals', 'date', isoDate(new Date())); }
+
+async function getTodayTotals() {
+  const meals = await getTodayMeals();
+  return {
+    protein: meals.reduce((s, m) => s + (m.protein || 0), 0),
+    calories: meals.reduce((s, m) => s + (m.calories || 0), 0)
+  };
+}
+
+async function getRecentMeals(bucket, subtype) {
+  try {
+    let all = await dbGetByIndex('meals', 'bucket', bucket);
+    if (subtype) all = all.filter(m => m.subtype === subtype);
+    all.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+    const seen = new Set();
+    const recent = [];
+    for (const m of all) {
+      if (!seen.has(m.name)) { seen.add(m.name); recent.push(m); if (recent.length >= 5) break; }
+    }
+    return recent;
+  } catch (err) { return []; }
+}
+
+async function getBuyTapCounts() {
+  try {
+    const all = await dbGetByIndex('meals', 'bucket', 'lunch');
+    const counts = {};
+    all.filter(m => m.subtype === 'buy').forEach(m => { counts[m.name] = (counts[m.name] || 0) + 1; });
+    return counts;
+  } catch (err) { return {}; }
+}
+
+async function updateProteinDisplay() {
+  try {
+    const { protein, calories } = await getTodayTotals();
+    const pct = Math.min(100, (protein / PROTEIN_TARGET) * 100);
+    const remaining = Math.max(0, PROTEIN_TARGET - protein);
+    const isHit = protein >= PROTEIN_TARGET;
+
+    // Home bar
+    const homeNum = document.getElementById('homeProteinNum');
+    const homeFill = document.getElementById('homeProteinFill');
+    const homeStatus = document.getElementById('homeProteinStatus');
+    if (homeNum) homeNum.textContent = protein;
+    if (homeFill) { homeFill.style.width = pct + '%'; homeFill.className = 'protein-home-fill' + (isHit ? ' complete' : ''); }
+    if (homeStatus) { homeStatus.textContent = isHit ? 'Target hit ✓' : `${remaining}g to go`; homeStatus.className = 'protein-home-status' + (isHit ? ' hit' : ''); }
+
+    // Eat screen
+    const eatNum = document.getElementById('eatProteinNum');
+    const eatFill = document.getElementById('eatProteinFill');
+    const eatLabel = document.getElementById('eatProteinLabel');
+    const eatCal = document.getElementById('eatCalNum');
+    if (eatNum) eatNum.textContent = protein;
+    if (eatFill) { eatFill.style.width = pct + '%'; eatFill.className = 'eat-protein-fill' + (isHit ? ' complete' : ''); }
+    if (eatLabel) { eatLabel.textContent = isHit ? 'Target hit ✓' : `${remaining}g to go`; eatLabel.className = 'eat-protein-label' + (isHit ? ' hit' : ''); }
+    if (eatCal) eatCal.textContent = calories;
+  } catch (err) { console.error('updateProteinDisplay:', err); }
+}
+
+async function renderEatHome() {
+  try {
+    const now = new Date();
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const sub = document.getElementById('eatDateSub');
+    if (sub) sub.textContent = `${days[now.getDay()]} · ${months[now.getMonth()]} ${now.getDate()}`;
+    await updateProteinDisplay();
+    const todayMeals = await getTodayMeals();
+    const buckets = [
+      { key: 'breakfast', label: 'Breakfast', time: '~7am' },
+      { key: 'lunch', label: 'Lunch', time: '~12pm' },
+      { key: 'dinner', label: 'Dinner', time: '~6:30pm' },
+      { key: 'snack', label: 'Snack', time: 'Anytime' }
+    ];
+    const grid = document.getElementById('mealGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    buckets.forEach(b => {
+      const bMeals = todayMeals.filter(m => m.bucket === b.key);
+      const totalP = bMeals.reduce((s, m) => s + (m.protein || 0), 0);
+      const totalC = bMeals.reduce((s, m) => s + (m.calories || 0), 0);
+      const isLogged = bMeals.length > 0;
+      const card = document.createElement('div');
+      card.className = 'meal-bucket-card' + (isLogged ? ' logged' : '');
+      card.onclick = () => openBucket(b.key);
+      let bottom = '';
+      if (isLogged) {
+        const last = bMeals[bMeals.length - 1];
+        const nm = last.name.length > 18 ? last.name.substring(0, 16) + '…' : last.name;
+        const calStr = totalC > 0 ? ` · ${totalC} cal` : '';
+        bottom = `
+          <div class="meal-bucket-meal-name">${nm}</div>
+          <div class="meal-bucket-protein">${totalP}g protein${calStr}</div>
+          ${bMeals.length > 1 ? `<div class="meal-bucket-multi">+${bMeals.length - 1} more</div>` : ''}`;
+      } else {
+        bottom = `<div class="meal-bucket-empty">Tap to add</div>`;
+      }
+      card.innerHTML = `<div class="meal-bucket-name">${b.label}</div><div class="meal-bucket-time">${b.time}</div>${bottom}`;
+      grid.appendChild(card);
+    });
+  } catch (err) { console.error('renderEatHome:', err); }
+}
+
+// ---- BUCKET STATE ----
+let currentMealBucket = null;
+let lunchMode = null;
+let otherBreakfastVisible = false;
+
+async function openBucket(bucket) {
+  currentMealBucket = bucket;
+  lunchMode = null;
+  otherBreakfastVisible = false;
+  const titles = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack: 'Snack' };
+  const titleEl = document.getElementById('bucketScreenTitle');
+  if (titleEl) titleEl.textContent = titles[bucket] || bucket;
+  await renderBucketScreen();
+  show('eatBucket');
+}
+
+async function renderBucketScreen() {
+  const body = document.getElementById('bucketBody');
+  if (!body || !currentMealBucket) return;
+  const todayMeals = await getTodayMeals();
+  const bucketMeals = todayMeals.filter(m => m.bucket === currentMealBucket);
+  let html = '';
+  if (bucketMeals.length > 0) {
+    const total = bucketMeals.reduce((s, m) => s + (m.protein || 0), 0);
+    const names = bucketMeals.map(m => m.name).join(', ');
+    const shortNames = names.length > 40 ? names.substring(0, 38) + '…' : names;
+    html += `
+      <div class="bucket-logged-banner">
+        <span>${shortNames} · ${total}g</span>
+        <span class="bucket-logged-banner-remove" onclick="removeLastBucketEntry('${currentMealBucket}')">✕ Remove last</span>
+      </div>`;
+  }
+  if (currentMealBucket === 'breakfast') html += renderBreakfastBody(bucketMeals);
+  else if (currentMealBucket === 'lunch') html += renderLunchBody(bucketMeals);
+  else if (currentMealBucket === 'dinner') html += await renderTypeOnlyBody('dinner', 'What did you eat?');
+  else if (currentMealBucket === 'snack') html += await renderTypeOnlyBody('snack', 'What did you have?');
+  body.innerHTML = html;
+  if (currentMealBucket === 'breakfast') {
+    const sec = document.getElementById('otherBreakfastSection');
+    if (sec) sec.style.display = otherBreakfastVisible ? 'block' : 'none';
+  }
+}
+
+function renderBreakfastBody(bucketMeals) {
+  let html = `<div class="bucket-title">Breakfast</div><div class="bucket-sub">What did you eat?</div>`;
+  MEAL_PRESETS.breakfast.forEach(p => {
+    const isLogged = bucketMeals.some(m => m.name === p.name);
+    html += `
+      <div class="meal-option-row ${isLogged ? 'logged' : ''}" onclick="logPreset('breakfast', '${escStr(p.name)}', ${p.protein}, 'preset', ${p.calories})">
+        <div class="meal-option-info">
+          <div class="meal-option-name">${p.name}</div>
+          <div class="meal-option-meta">${p.protein}g · ${p.calories} cal</div>
+        </div>
+        <div class="meal-option-check">${isLogged ? '✓' : '+'}</div>
+      </div>`;
+  });
+  html += `
+    <div class="meal-option-row" onclick="toggleOtherBreakfast()">
+      <div class="meal-option-info">
+        <div class="meal-option-name">Other</div>
+        <div class="meal-option-meta">Type it in</div>
+      </div>
+      <div class="meal-option-check">+</div>
+    </div>
+    <div id="otherBreakfastSection" style="display:none; margin-top: 4px; margin-bottom: 16px;">
+      <input type="text" class="meal-type-input" id="otherBreakfastInput" placeholder="e.g. 3 eggs and toast">
+      <button class="primary-btn" onclick="logTypedFromField('breakfast', 'otherBreakfastInput', 'other')">Log it</button>
+    </div>`;
+  return html;
+}
+
+function renderLunchBody(bucketMeals) {
+  const buyActive = lunchMode === 'buy' ? 'active' : '';
+  const bbActive = lunchMode === 'brownbag' ? 'active' : '';
+  let html = `
+    <div class="bucket-title">Lunch</div>
+    <div class="bucket-sub">Home or out?</div>
+    <div class="binary-toggle">
+      <div class="binary-btn ${buyActive}" onclick="setLunchMode('buy')">
+        <span class="binary-btn-icon">🏪</span>Buying
+      </div>
+      <div class="binary-btn ${bbActive}" onclick="setLunchMode('brownbag')">
+        <span class="binary-btn-icon">🥪</span>Brown Bag
+      </div>
+    </div>`;
+  if (lunchMode === 'buy') html += renderLunchBuyBody(bucketMeals);
+  else if (lunchMode === 'brownbag') html += renderLunchBrownBagBody();
+  return html;
+}
+
+function renderLunchBuyBody(bucketMeals) {
+  const counts = window._buyTapCounts || {};
+  // Sort: CFA always floats first if untied; otherwise by count
+  const otherPlaces = [
+    { name: "Jersey Mike's", protein: 30, calories: 650 },
+    { name: 'Five Guys', protein: 28, calories: 840 },
+    { name: 'Local Sub Shop', protein: 25, calories: 600 }
+  ];
+  const isCFALogged = bucketMeals.some(m => m.name === 'Chick-fil-A' && m.subtype === 'buy');
+  let html = `
+    <div class="meal-option-row ${isCFALogged ? 'logged' : ''} top-pick" onclick="${isCFALogged ? '' : 'openCFAMenu()'}">
+      <div class="meal-option-info">
+        <div class="meal-option-name">Chick-fil-A</div>
+        <div class="meal-option-meta">${isCFALogged ? 'Logged ✓' : 'Build your order →'}</div>
+      </div>
+      <div class="meal-option-check">${isCFALogged ? '✓' : '→'}</div>
+    </div>`;
+  otherPlaces.forEach(p => {
+    const isLogged = bucketMeals.some(m => m.name === p.name && m.subtype === 'buy');
+    html += `
+      <div class="meal-option-row ${isLogged ? 'logged' : ''}" onclick="logPreset('lunch', '${escStr(p.name)}', ${p.protein}, 'buy', ${p.calories})">
+        <div class="meal-option-info">
+          <div class="meal-option-name">${p.name}</div>
+          <div class="meal-option-meta">${p.protein}g · ${p.calories} cal</div>
+        </div>
+        <div class="meal-option-check">${isLogged ? '✓' : '+'}</div>
+      </div>`;
+  });
+  html += `
+    <div style="margin-top: 14px;">
+      <input type="text" class="meal-type-input" id="lunchBuyOtherInput" placeholder="Somewhere else?">
+      <button class="primary-btn" onclick="logTypedFromField('lunch', 'lunchBuyOtherInput', 'buy')">Log it</button>
+    </div>`;
+  return html;
+}
+
+function renderLunchBrownBagBody() {
+  const html = `
+    <input type="text" class="meal-type-input" id="lunchBrownBagInput" placeholder="What did you pack?">
+    <button class="primary-btn" onclick="logTypedFromField('lunch', 'lunchBrownBagInput', 'brownbag')">Log it</button>
+    <div id="recentBrownBagSection"></div>`;
+  setTimeout(() => populateRecentSection('recentBrownBagSection', 'lunch', 'brownbag'), 50);
+  return html;
+}
+
+async function renderTypeOnlyBody(bucket, placeholder) {
+  const inputId = bucket + 'TypeInput';
+  const sectionId = 'recent' + capitalize(bucket) + 'Section';
+  const html = `
+    <div class="bucket-title">${capitalize(bucket)}</div>
+    <div class="bucket-sub">What did you eat?</div>
+    <input type="text" class="meal-type-input" id="${inputId}" placeholder="${placeholder}">
+    <button class="primary-btn" onclick="logTypedFromField('${bucket}', '${inputId}', 'other')">Log it</button>
+    <div id="${sectionId}"></div>`;
+  setTimeout(() => populateRecentSection(sectionId, bucket, null), 50);
+  return html;
+}
+
+async function populateRecentSection(elementId, bucket, subtype) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const recent = await getRecentMeals(bucket, subtype);
+  if (recent.length === 0) return;
+  let html = `<div class="recent-section"><div class="recent-header">Recent</div>`;
+  recent.forEach(m => {
+    const calStr = m.calories ? ` · ${m.calories} cal` : '';
+    html += `
+      <div class="recent-item" onclick="relogMeal(${m.id})">
+        <div class="recent-item-name">${m.name}</div>
+        <div class="recent-item-meta">${m.protein}g${calStr}</div>
+      </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+async function setLunchMode(mode) {
+  lunchMode = mode;
+  if (mode === 'buy') window._buyTapCounts = await getBuyTapCounts();
+  await renderBucketScreen();
+}
+
+function toggleOtherBreakfast() {
+  otherBreakfastVisible = !otherBreakfastVisible;
+  const sec = document.getElementById('otherBreakfastSection');
+  if (sec) sec.style.display = otherBreakfastVisible ? 'block' : 'none';
+}
+
+async function logPreset(bucket, name, protein, subtype, calories) {
+  try {
+    await dbSave('meals', {
+      date: isoDate(new Date()), bucket, subtype: subtype || 'preset',
+      name, protein, calories: calories || 0, timestamp: new Date().toISOString()
+    });
+    await updateProteinDisplay();
+    show('meal');
+  } catch (err) { console.error('logPreset:', err); }
+}
+
+async function logTypedFromField(bucket, inputId, subtype) {
+  const el = document.getElementById(inputId);
+  const text = el ? el.value.trim() : '';
+  if (!text) { if (el) el.focus(); return; }
+  await logTypedMeal(bucket, text, subtype);
+}
+
+async function logTypedMeal(bucket, text, subtype) {
+  try {
+    const protein = estimateProtein(text);
+    await dbSave('meals', {
+      date: isoDate(new Date()), bucket, subtype: subtype || 'other',
+      name: text, protein, calories: 0, timestamp: new Date().toISOString()
+    });
+    await updateProteinDisplay();
+    show('meal');
+  } catch (err) { console.error('logTypedMeal:', err); }
+}
+
+async function relogMeal(mealId) {
+  try {
+    const all = await dbGetAll('meals');
+    const orig = all.find(m => m.id === mealId);
+    if (!orig) return;
+    await dbSave('meals', {
+      date: isoDate(new Date()), bucket: orig.bucket, subtype: orig.subtype,
+      name: orig.name, protein: orig.protein, calories: orig.calories || 0,
+      timestamp: new Date().toISOString()
+    });
+    await updateProteinDisplay();
+    show('meal');
+  } catch (err) { console.error('relogMeal:', err); }
+}
+
+async function removeLastBucketEntry(bucket) {
+  try {
+    const today = isoDate(new Date());
+    const all = await dbGetByIndex('meals', 'date', today);
+    const entries = all.filter(m => m.bucket === bucket);
+    if (entries.length === 0) return;
+    entries.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+    await dbDelete('meals', entries[0].id);
+    await updateProteinDisplay();
+    await renderBucketScreen();
+  } catch (err) { console.error('removeLastBucketEntry:', err); }
+}
+
+// ============================================================
+// CFA MENU — STAGE 3.1
+// ============================================================
+
+// Real Chick-fil-A nutrition data (sourced from CFA's public nutrition info)
+const CFA_MENU = [
+  // Sandwiches
+  { id: 'cfa-sandwich', name: 'Chicken Sandwich', category: 'Sandwiches', protein: 28, calories: 440 },
+  { id: 'cfa-spicy-sandwich', name: 'Spicy Chicken Sandwich', category: 'Sandwiches', protein: 28, calories: 450 },
+  { id: 'cfa-deluxe', name: 'Deluxe Chicken Sandwich', category: 'Sandwiches', protein: 29, calories: 510 },
+  { id: 'cfa-spicy-deluxe', name: 'Spicy Deluxe Sandwich', category: 'Sandwiches', protein: 37, calories: 550 },
+  { id: 'cfa-grilled-sandwich', name: 'Grilled Chicken Sandwich', category: 'Sandwiches', protein: 30, calories: 320 },
+  // Nuggets
+  { id: 'cfa-nugs-8', name: '8-ct Nuggets', category: 'Nuggets', protein: 28, calories: 260 },
+  { id: 'cfa-nugs-12', name: '12-ct Nuggets', category: 'Nuggets', protein: 42, calories: 400 },
+  { id: 'cfa-grilled-8', name: '8-ct Grilled Nuggets', category: 'Nuggets', protein: 25, calories: 130 },
+  { id: 'cfa-grilled-12', name: '12-ct Grilled Nuggets', category: 'Nuggets', protein: 38, calories: 200 },
+  // Sides
+  { id: 'cfa-mac', name: 'Mac & Cheese (medium)', category: 'Sides', protein: 17, calories: 440 },
+  { id: 'cfa-fries', name: 'Waffle Fries (medium)', category: 'Sides', protein: 5, calories: 420 },
+  { id: 'cfa-fruit', name: 'Fruit Cup (medium)', category: 'Sides', protein: 1, calories: 70 },
+  // Add-ons
+  { id: 'cfa-cheese', name: 'American Cheese', category: 'Add-ons', protein: 3, calories: 50 },
+  { id: 'cfa-bacon', name: 'Bacon', category: 'Add-ons', protein: 5, calories: 70 },
+  // Drinks
+  { id: 'cfa-lemonade', name: 'Lemonade (medium)', category: 'Drinks', protein: 0, calories: 210 },
+  { id: 'cfa-diet-lem', name: 'Diet Lemonade (medium)', category: 'Drinks', protein: 0, calories: 15 },
+  { id: 'cfa-sweet-tea', name: 'Sweet Tea (medium)', category: 'Drinks', protein: 0, calories: 120 }
+];
+
+// CFA selection state — Set of item IDs
+let cfaSelected = new Set();
+
+function openCFAMenu() {
+  cfaSelected = new Set();
+  renderCFAMenu();
+  show('cfaMenu');
+}
+
+function renderCFAMenu() {
+  // Update running totals
+  let totalProtein = 0;
+  let totalCal = 0;
+  cfaSelected.forEach(id => {
+    const item = CFA_MENU.find(i => i.id === id);
+    if (item) { totalProtein += item.protein; totalCal += item.calories; }
+  });
+  document.getElementById('cfaTotalProtein').textContent = totalProtein + 'g';
+  document.getElementById('cfaTotalCal').textContent = totalCal;
+  document.getElementById('cfaItemCount').textContent = cfaSelected.size;
+
+  // Sticky bar subtext
+  const subtext = document.getElementById('cfaStickySubtext');
+  if (subtext) {
+    subtext.textContent = cfaSelected.size === 0
+      ? 'Select items above'
+      : `${totalProtein}g protein · ${totalCal} cal`;
+  }
+
+  // Build menu body by category
+  const categories = ['Sandwiches', 'Nuggets', 'Sides', 'Add-ons', 'Drinks'];
+  const body = document.getElementById('cfaMenuBody');
+  if (!body) return;
+  body.innerHTML = '';
+
+  categories.forEach(cat => {
+    const items = CFA_MENU.filter(i => i.category === cat);
+    if (items.length === 0) return;
+
+    const catLabel = document.createElement('div');
+    catLabel.className = 'cfa-category-label';
+    catLabel.textContent = cat;
+    body.appendChild(catLabel);
+
+    items.forEach(item => {
+      const row = document.createElement('div');
+      const isSelected = cfaSelected.has(item.id);
+      row.className = 'cfa-item-row' + (isSelected ? ' selected' : '');
+      row.onclick = () => toggleCFAItem(item.id);
+      row.innerHTML = `
+        <div class="cfa-item-check">${isSelected ? '✓' : ''}</div>
+        <div class="cfa-item-info">
+          <div class="cfa-item-name">${item.name}</div>
+          <div class="cfa-item-meta">${item.protein}g protein · ${item.calories} cal</div>
+        </div>`;
+      body.appendChild(row);
+    });
+  });
+}
+
+function toggleCFAItem(id) {
+  if (cfaSelected.has(id)) cfaSelected.delete(id);
+  else cfaSelected.add(id);
+  renderCFAMenu();
+}
+
+async function logCFAOrder() {
+  if (cfaSelected.size === 0) return;
+
+  let totalProtein = 0;
+  let totalCal = 0;
+  const selectedNames = [];
+
+  cfaSelected.forEach(id => {
+    const item = CFA_MENU.find(i => i.id === id);
+    if (item) {
+      totalProtein += item.protein;
+      totalCal += item.calories;
+      selectedNames.push(item.name);
+    }
+  });
+
+  // Build a display name: first item + count if multiple
+  const displayName = selectedNames.length === 1
+    ? `CFA: ${selectedNames[0]}`
+    : `CFA: ${selectedNames[0]} +${selectedNames.length - 1}`;
+
+  try {
+    await dbSave('meals', {
+      date: isoDate(new Date()),
+      bucket: 'lunch',
+      subtype: 'buy',
+      name: displayName,
+      protein: totalProtein,
+      calories: totalCal,
+      cfaItems: selectedNames,
+      timestamp: new Date().toISOString()
+    });
+    await updateProteinDisplay();
+    cfaSelected = new Set();
+    show('meal');
+  } catch (err) { console.error('logCFAOrder:', err); }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  updateGreeting();
+  try {
+    await openDB();
+    await loadCustomExercises();
+    await loadHomeStats();
+    await renderScoreboard();
+    await updateProteinDisplay();
+  } catch (err) { console.error('DB init failed:', err); }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
